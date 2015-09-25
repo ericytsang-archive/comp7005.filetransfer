@@ -11,7 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
 
-import filetransfer.Application;
+import filetransfer.logic.ClientAppLogic;
+import filetransfer.logic.ServerAppLogic;
 
 public class AppWindow extends JFrame
 {
@@ -35,7 +36,8 @@ public class AppWindow extends JFrame
      */
     private static final String WINDOW_TITLE = "Eric's COMP 7005 Assignment 1";
 
-    private final Application app;
+    private final ServerAppLogic serverApp;
+    private final ClientAppLogic clientApp;
 
     /**
      * creates and configures the application window, and initializes instance
@@ -52,7 +54,8 @@ public class AppWindow extends JFrame
         setVisible(true);
 
         // initialize instance data
-        app = new Application();
+        serverApp = new ServerAppLogic();
+        clientApp = new ClientAppLogic();
     }
 
     /**
@@ -71,19 +74,33 @@ public class AppWindow extends JFrame
     {
         public MyMenuBar()
         {
-            // create the menu & add it to the application window
-            JMenu serverOptionsMenu = new JMenu("Server Options");
+            // create the server menu & add it to the application window
+            JMenu serverOptionsMenu = new JMenu("Server");
             add(serverOptionsMenu);
 
-            // create the start server menu item
-            JMenuItem startMenuItem = new JMenuItem("Start Server");
-            startMenuItem.addActionListener(event -> app.promptStartServer(AppWindow.this));
+            // create the start server menu item & add it to the server menu
+            JMenuItem startMenuItem = new JMenuItem("Start");
+            startMenuItem.addActionListener(event -> serverApp.promptStartServer(AppWindow.this));
             serverOptionsMenu.add(startMenuItem);
 
-            // create the stop server menu item
-            JMenuItem stopMenuItem = new JMenuItem("Stop Server");
-            stopMenuItem.addActionListener(event -> app.stopServer(AppWindow.this));
+            // create the stop server menu item & add it to the server menu
+            JMenuItem stopMenuItem = new JMenuItem("Stop");
+            stopMenuItem.addActionListener(event -> serverApp.stopServer(AppWindow.this));
             serverOptionsMenu.add(stopMenuItem);
+
+            // create the client menu & add it to the application window
+            JMenu clientOptionsMenu = new JMenu("Client");
+            add(clientOptionsMenu);
+
+            // create the start server menu item & add it to the server menu
+            JMenuItem addServerMenuItem = new JMenuItem("Add server");
+            addServerMenuItem.addActionListener(event -> clientApp.promptAddServer(AppWindow.this));
+            clientOptionsMenu.add(addServerMenuItem);
+
+            // create the stop server menu item & add it to the server menu
+            JMenuItem removeServerMenuItem = new JMenuItem("Remove server");
+            removeServerMenuItem.addActionListener(event -> clientApp.promptRemoveServer(AppWindow.this));
+            clientOptionsMenu.add(removeServerMenuItem);
         }
     }
 

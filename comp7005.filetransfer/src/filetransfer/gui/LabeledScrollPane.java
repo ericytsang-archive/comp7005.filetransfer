@@ -28,6 +28,7 @@ public class LabeledScrollPane extends JPanel
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setMinimumSize(new Dimension(0,0));
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE,Integer.MAX_VALUE));
+        scrollPane.setLayout(new BoxLayout(scrollPane,BoxLayout.Y_AXIS));
 
         // set the panel's layout manager & add components to the panel
         setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));

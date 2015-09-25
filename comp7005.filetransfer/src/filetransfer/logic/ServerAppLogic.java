@@ -1,4 +1,4 @@
-package filetransfer;
+package filetransfer.logic;
 
 import java.awt.Component;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import javax.swing.JOptionPane;
 
 import filetransfer.net.Server;
 
-public class Application
+public class ServerAppLogic
 {
     // constants: dialog titles
     private static final String TITLE_START_SERVER_SUCCEEDED = "Successfully Started Server";
