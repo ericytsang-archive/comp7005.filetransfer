@@ -1,6 +1,5 @@
 package filetransfer.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.util.List;
 
@@ -16,7 +15,6 @@ public class LabeledScrollPane extends JPanel
 {
     private final JLabel label;
     private final JPanel scrolledPanel;
-    private final JScrollPane scrollPane;
 
     public LabeledScrollPane(Adapter adapter)
     {
@@ -25,7 +23,7 @@ public class LabeledScrollPane extends JPanel
         // initialize instance data
         label = new JLabel();
         scrolledPanel = new JPanel();
-        scrollPane = new JScrollPane(scrolledPanel);
+        JScrollPane scrollPane = new JScrollPane(scrolledPanel);
 
         // configure swing components
         label.setHorizontalAlignment(SwingConstants.LEFT);

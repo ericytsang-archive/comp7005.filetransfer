@@ -94,14 +94,9 @@ public class AppWindow extends JFrame
             add(clientOptionsMenu);
 
             // create the start server menu item & add it to the server menu
-            JMenuItem addServerMenuItem = new JMenuItem("Add server");
-            addServerMenuItem.addActionListener(event -> clientApp.promptAddServer(AppWindow.this));
+            JMenuItem addServerMenuItem = new JMenuItem("Connect...");
+            addServerMenuItem.addActionListener(event -> clientApp.promptConnect(AppWindow.this));
             clientOptionsMenu.add(addServerMenuItem);
-
-            // create the stop server menu item & add it to the server menu
-            JMenuItem removeServerMenuItem = new JMenuItem("Remove server");
-            removeServerMenuItem.addActionListener(event -> clientApp.promptRemoveServer(AppWindow.this));
-            clientOptionsMenu.add(removeServerMenuItem);
         }
     }
 

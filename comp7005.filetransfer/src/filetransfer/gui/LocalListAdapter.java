@@ -13,7 +13,6 @@ import filetransfer.logic.ClientAppLogic;
 public class LocalListAdapter extends LabeledScrollPane.Adapter
 {
     private final ClientAppLogic clientApp;
-    private String title;
 
     public LocalListAdapter(ClientAppLogic clientApp)
     {

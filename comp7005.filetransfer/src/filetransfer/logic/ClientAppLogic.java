@@ -30,12 +30,7 @@ public class ClientAppLogic
         currentDirectory = newDirectory;
     }
 
-    public void promptAddServer(Component parentComponent)
-    {
-        // todo: implement
-    }
-
-    public void promptRemoveServer(Component parentComponent)
+    public void promptConnect(Component parentComponent)
     {
         // todo: implement
     }
