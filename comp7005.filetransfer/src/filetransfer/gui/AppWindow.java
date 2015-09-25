@@ -45,17 +45,18 @@ public class AppWindow extends JFrame
      */
     public AppWindow()
     {
-        // create and configure application window
         super(WINDOW_TITLE);
+
+        // initialize instance data
+        serverApp = new ServerAppLogic();
+        clientApp = new ClientAppLogic();
+
+        // create and configure application window
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setContentPane(new MyContentPane());
         setSize(new Dimension(WINDOW_WIDTH,WINDOW_HEIGHT));
         setJMenuBar(new MyMenuBar());
         setVisible(true);
-
-        // initialize instance data
-        serverApp = new ServerAppLogic();
-        clientApp = new ClientAppLogic();
     }
 
     /**
@@ -112,8 +113,8 @@ public class AppWindow extends JFrame
 
             // set the panel's layout manager & add components to the panel
             setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
-            add(new LabeledScrollPane("Local Files:"));
-            add(new LabeledScrollPane("Remote Files:"));
+            add(new LabeledScrollPane(new LocalListAdapter(clientApp)));
+            add(new LabeledScrollPane(new RemoteListAdapter()));
 
             // todo: remove the code below, and put it into the appropriate place (a view holder....)
             // example of how to create a context menu!
