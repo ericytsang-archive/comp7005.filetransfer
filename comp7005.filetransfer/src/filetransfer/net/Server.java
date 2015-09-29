@@ -69,7 +69,15 @@ public abstract class Server
                 // accept a connection...
                 try
                 {
-                    onAccept(serverSocket.accept());
+                    final Socket newSocket = serverSocket.accept();
+                    new Thread()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            onAccept(newSocket);
+                        }
+                    }.start();
                 }
 
                 // server socket closed by another thread; stop accepting

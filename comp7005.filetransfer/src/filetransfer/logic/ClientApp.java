@@ -9,6 +9,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
@@ -31,14 +35,18 @@ public class ClientApp
     // instance data: general
     private File currentDirectory;
     private InetSocketAddress remoteAddress;
+    private LocalListAdapter localListAdapter;
     private RemoteListAdapter remoteListAdapter;
+    private ThreadPoolExecutor threadPoolExecutor;
 
     // public interface: constructors
 
     public ClientApp()
     {
-        currentDirectory = new File("./");
+        currentDirectory = new File(".");
+        localListAdapter = new LocalListAdapter(this);
         remoteListAdapter = new RemoteListAdapter(this);
+        threadPoolExecutor = new ThreadPoolExecutor(1,1,1,TimeUnit.SECONDS,new LinkedBlockingQueue<>());
     }
 
     // public interface: server methods
@@ -50,7 +58,6 @@ public class ClientApp
 
     public void setCurrentDirectory(File newDirectory)
     {
-        // todo: there may need to be some sort of error checking... :o test pris~
         currentDirectory = newDirectory;
     }
 
@@ -72,7 +79,9 @@ public class ClientApp
             remoteAddress = new InetSocketAddress(remoteHost,portNumber);
 
             // attempt to query files from the address right away
-            remoteListAdapter.present(parentComponent,pullDirectoryFiles(parentComponent,"./"));
+            threadPoolExecutor.execute(() ->
+                remoteListAdapter.present(parentComponent,pullDirectoryFiles(parentComponent,"."))
+            );
         }
 
         // invalid port number
@@ -96,27 +105,24 @@ public class ClientApp
         }
     }
 
+    public LocalListAdapter getLocalListAdapter()
+    {
+        return localListAdapter;
+    }
+
+    public RemoteListAdapter getRemoteListAdapter()
+    {
+        return remoteListAdapter;
+    }
+
     public synchronized List<JsonableFile> pullDirectoryFiles(Component parentComponent,String path)
     {
-        ProgressMonitor progressMonitor = new ProgressMonitor(null,MESSAGE_PULLING_DIR_FILES,null,0,4);
-        progressMonitor.setMillisToDecideToPopup(100);
+        ProgressMonitor progressMonitor = new ProgressMonitor(parentComponent,MESSAGE_PULLING_DIR_FILES,null,0,4);
 
         try
         {
-            // prepare the request string
-            progressMonitor.setProgress(0);
-            JSONObject json = new JSONObject();
-            json.put(Protocol.KEY_TYPE,Protocol.TYPE_PULL_DIR_FILES);
-            json.put(Protocol.KEY_PATH,path);
-
-            // do the pulling
-            progressMonitor.setProgress(1);
-            PullClient puller = new PullClient(remoteAddress);
-            String response = puller.pull(json.toString());
-
-            // parse the received response string and return
-            progressMonitor.setProgress(3);
-            return JsonableUtils.fromJsonArray(JsonableFile.class,new JSONArray(response));
+            progressMonitor.setMillisToDecideToPopup(0);
+            return AppPullServer.pullDirectoryFiles(remoteAddress,progressMonitor,path);
         }
 
         catch(IOException e)
@@ -131,16 +137,6 @@ public class ClientApp
             progressMonitor.setProgress(4);
             progressMonitor.close();
         }
-    }
-
-    public LocalListAdapter getLocalListAdapter()
-    {
-        return new LocalListAdapter(this);
-    }
-
-    public RemoteListAdapter getRemoteListAdapter()
-    {
-        return remoteListAdapter;
     }
 
     // private interface: dialog message builders

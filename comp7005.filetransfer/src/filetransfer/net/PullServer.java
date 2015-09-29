@@ -91,6 +91,7 @@ public abstract class PullServer extends Server
             String response;
             try
             {
+                Thread.sleep(5000);// todo: remove this sleep statement
                 response = onPullRequest(socket,request);
                 System.out.println(">>>"+response);
             }

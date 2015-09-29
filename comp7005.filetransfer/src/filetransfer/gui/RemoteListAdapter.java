@@ -22,16 +22,12 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
     }
 
     @Override
-    public List<ListItem> getInitialListItems()
+    protected void onSetLabeledScrollPane()
     {
-        return Collections.emptyList();
+        setTitle("Remote Files:");
     }
 
-    @Override
-    public String getInitialTitle()
-    {
-        return "Remote Files:";
-    }
+    // public interface: server methods
 
     public void present(Component parentComponent,Collection<JsonableFile> files)
     {
@@ -44,9 +40,15 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
             {
                 ListItem<?> item = new FolderListItem(file);
                 listItems.add(item);
-                item.addActionListener(e -> {
-                    present(parentComponent,clientApp.pullDirectoryFiles(parentComponent,file.getAbsolutePath()));
-                });
+                item.addActionListener(e ->
+                    new Thread()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            present(parentComponent,clientApp.pullDirectoryFiles(parentComponent,file.getAbsolutePath()));
+                        }
+                    }.start());
             }
             else
             {

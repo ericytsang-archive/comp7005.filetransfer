@@ -8,7 +8,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
 
 import filetransfer.logic.ClientApp;
@@ -110,14 +109,6 @@ public class AppWindow extends JFrame
             setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
             add(new LabeledScrollPane(clientApp.getLocalListAdapter()));
             add(new LabeledScrollPane(clientApp.getRemoteListAdapter()));
-
-            // todo: remove the code below, and put it into the appropriate place (a view holder....)
-            // example of how to create a context menu!
-            JPopupMenu contextMenu = new JPopupMenu();
-            contextMenu.add(new JMenuItem("Item 1"));
-            contextMenu.add(new JMenuItem("Item 2"));
-            contextMenu.add(new JMenuItem("Item 3"));
-            setComponentPopupMenu(contextMenu);
         }
     }
 }

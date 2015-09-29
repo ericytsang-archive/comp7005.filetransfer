@@ -7,8 +7,8 @@ import java.util.List;
 import filetransfer.gui.listitem.FileListItem;
 import filetransfer.gui.listitem.FolderListItem;
 import filetransfer.gui.listitem.ListItem;
-import filetransfer.gui.listitem.ParentFolderListItem;
 import filetransfer.logic.ClientApp;
+import filetransfer.logic.JsonableFile;
 
 public class LocalListAdapter extends LabeledScrollPane.Adapter
 {
@@ -20,15 +20,10 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
     }
 
     @Override
-    public List<ListItem> getInitialListItems()
+    protected void onSetLabeledScrollPane()
     {
-        return getDirectoryItems();
-    }
-
-    @Override
-    public String getInitialTitle()
-    {
-        return "Local Files:";
+        setListItems(getDirectoryItems());
+        setTitle("Local Files:");
     }
 
     // private interface: support methods
@@ -59,7 +54,7 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
         File parentFile = clientApp.getCurrentDirectory().getAbsoluteFile().getParentFile();
         if(parentFile != null)
         {
-            ListItem<?> item = new ParentFolderListItem(parentFile);
+            ListItem<?> item = new FolderListItem(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
             listItems.addFirst(item);
             item.addActionListener(e -> {
                 clientApp.setCurrentDirectory(parentFile);

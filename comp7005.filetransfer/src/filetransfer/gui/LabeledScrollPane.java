@@ -42,22 +42,29 @@ public class LabeledScrollPane extends JPanel
 
         // configure adapter, and populate list with default items from adapter
         adapter.setLabeledScrollPane(this);
-        adapter.getInitialListItems().forEach(scrollPane::add);
+    }
+
+    public JLabel getLabel()
+    {
+        return label;
+    }
+
+    public JPanel getScrolledPanel()
+    {
+        return scrolledPanel;
     }
 
     public static abstract class Adapter
     {
         private LabeledScrollPane labeledScrollPane;
 
-        public abstract List<ListItem> getInitialListItems();
-        public abstract String getInitialTitle();
-
         public final void setLabeledScrollPane(LabeledScrollPane labeledScrollPane)
         {
             this.labeledScrollPane = labeledScrollPane;
-            labeledScrollPane.getLabel().setText(getInitialTitle());
-            getInitialListItems().forEach(labeledScrollPane.getScrolledPanel()::add);
+            onSetLabeledScrollPane();
         }
+
+        protected abstract void onSetLabeledScrollPane();
 
         public final void setTitle(String newTitle)
         {
@@ -71,15 +78,5 @@ public class LabeledScrollPane extends JPanel
             labeledScrollPane.getScrolledPanel().revalidate();
             labeledScrollPane.getScrolledPanel().repaint();
         }
-    }
-
-    public JLabel getLabel()
-    {
-        return label;
-    }
-
-    public JPanel getScrolledPanel()
-    {
-        return scrolledPanel;
     }
 }
