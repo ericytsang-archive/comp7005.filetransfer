@@ -1,5 +1,6 @@
 package filetransfer.gui;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.util.List;
 
@@ -58,7 +59,7 @@ public class LabeledScrollPane extends JPanel
     {
         private LabeledScrollPane labeledScrollPane;
 
-        public final void setLabeledScrollPane(LabeledScrollPane labeledScrollPane)
+        private void setLabeledScrollPane(LabeledScrollPane labeledScrollPane)
         {
             this.labeledScrollPane = labeledScrollPane;
             onSetLabeledScrollPane();
@@ -77,6 +78,11 @@ public class LabeledScrollPane extends JPanel
             newListItems.forEach(labeledScrollPane.getScrolledPanel()::add);
             labeledScrollPane.getScrolledPanel().revalidate();
             labeledScrollPane.getScrolledPanel().repaint();
+        }
+
+        public final Component getParentComponent()
+        {
+            return labeledScrollPane;
         }
     }
 }

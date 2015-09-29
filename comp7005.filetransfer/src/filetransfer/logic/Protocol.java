@@ -17,11 +17,4 @@ public class Protocol
 
     // constants: packet preferences
     public static final int SEGMENT_LENGTH = Integer.MAX_VALUE-100;
-
-    // constants: json keys
-    public static final String KEY_TYPE = "0";
-    public static final String KEY_PATH = "1";
-
-    // constants: values for {@link KEY_PATH}
-    public static final int TYPE_PULL_DIR_FILES = 0;
 }

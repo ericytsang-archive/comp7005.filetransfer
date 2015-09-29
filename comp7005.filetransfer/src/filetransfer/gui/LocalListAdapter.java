@@ -46,7 +46,17 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
             }
             else
             {
-                listItems.add(new FileListItem(file));
+                ListItem<?> item = new FileListItem(file);
+                listItems.add(item);
+                item.addActionListener(e ->
+                    new Thread()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            clientApp.pushFile(getParentComponent(),file);
+                        }
+                    }.start());
             }
         }
 

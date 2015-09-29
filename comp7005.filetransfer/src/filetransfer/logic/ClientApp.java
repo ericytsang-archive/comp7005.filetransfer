@@ -1,15 +1,11 @@
 package filetransfer.logic;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +15,6 @@ import javax.swing.ProgressMonitor;
 
 import filetransfer.gui.LocalListAdapter;
 import filetransfer.gui.RemoteListAdapter;
-import filetransfer.net.PullClient;
 
 public class ClientApp
 {
@@ -30,10 +25,10 @@ public class ClientApp
 
     // constants: dialog titles
     private static final String TITLE_CONNECT_FAILED = "Error Connecting to Remote Host";
-    private static final String MESSAGE_PULLING_DIR_FILES = "Pulling files...";
 
     // instance data: general
     private File currentDirectory;
+    private String currentRemoteDirectory;
     private InetSocketAddress remoteAddress;
     private LocalListAdapter localListAdapter;
     private RemoteListAdapter remoteListAdapter;
@@ -44,6 +39,7 @@ public class ClientApp
     public ClientApp()
     {
         currentDirectory = new File(".");
+        currentRemoteDirectory = ".";
         localListAdapter = new LocalListAdapter(this);
         remoteListAdapter = new RemoteListAdapter(this);
         threadPoolExecutor = new ThreadPoolExecutor(1,1,1,TimeUnit.SECONDS,new LinkedBlockingQueue<>());
@@ -80,7 +76,7 @@ public class ClientApp
 
             // attempt to query files from the address right away
             threadPoolExecutor.execute(() ->
-                remoteListAdapter.present(parentComponent,pullDirectoryFiles(parentComponent,"."))
+                remoteListAdapter.present(pullDirectoryFiles(parentComponent,"."))
             );
         }
 
@@ -115,14 +111,61 @@ public class ClientApp
         return remoteListAdapter;
     }
 
-    public synchronized List<JsonableFile> pullDirectoryFiles(Component parentComponent,String path)
+    public void pullFile(Component parentComponent,String path)
     {
-        ProgressMonitor progressMonitor = new ProgressMonitor(parentComponent,MESSAGE_PULLING_DIR_FILES,null,0,4);
+        ProgressMonitor progressMonitor = new ProgressMonitor(parentComponent,makeDownloadingFileMessage(path),null,0,100);
 
         try
         {
             progressMonitor.setMillisToDecideToPopup(0);
-            return AppPullServer.pullDirectoryFiles(remoteAddress,progressMonitor,path);
+            AppServer.pullFile(remoteAddress,progressMonitor,path,currentDirectory);
+        }
+
+        catch(IOException e)
+        {
+            JOptionPane.showMessageDialog(parentComponent,makeConnectFailedMessage(remoteAddress.getHostString(),remoteAddress.getPort()),TITLE_CONNECT_FAILED,JOptionPane.ERROR_MESSAGE);
+        }
+
+        // cleanup and end progress dialog
+        finally
+        {
+            progressMonitor.setProgress(100);
+            progressMonitor.close();
+        }
+    }
+
+    public void pushFile(Component parentComponent,File fileToSend)
+    {
+        ProgressMonitor progressMonitor = new ProgressMonitor(parentComponent,makeUploadingFileMessage(fileToSend),null,0,100);
+
+        try
+        {
+            progressMonitor.setMillisToDecideToPopup(0);
+            AppServer.pushFile(remoteAddress,progressMonitor,currentRemoteDirectory,fileToSend);
+        }
+
+        catch(IOException e)
+        {
+            JOptionPane.showMessageDialog(parentComponent,makeConnectFailedMessage(remoteAddress.getHostString(),remoteAddress.getPort()),TITLE_CONNECT_FAILED,JOptionPane.ERROR_MESSAGE);
+        }
+
+        // cleanup and end progress dialog
+        finally
+        {
+            progressMonitor.setProgress(100);
+            progressMonitor.close();
+        }
+    }
+
+    public List<JsonableFile> pullDirectoryFiles(Component parentComponent,String path)
+    {
+        ProgressMonitor progressMonitor = new ProgressMonitor(parentComponent,makePullingDirectoryFilesMessage(path),null,0,4);
+        currentRemoteDirectory = path;
+
+        try
+        {
+            progressMonitor.setMillisToDecideToPopup(0);
+            return AppServer.pullDirectoryFiles(remoteAddress,progressMonitor,path);
         }
 
         catch(IOException e)
@@ -140,6 +183,21 @@ public class ClientApp
     }
 
     // private interface: dialog message builders
+
+    private String makePullingDirectoryFilesMessage(String path)
+    {
+        return "Downloading files in directory: "+path;
+    }
+
+    private String makeUploadingFileMessage(File fileToSend)
+    {
+        return "Uploading: "+fileToSend.getAbsolutePath();
+    }
+
+    private String makeDownloadingFileMessage(String path)
+    {
+        return "Downloading: "+path;
+    }
 
     private String makeConnectFailedMessage(String remoteHost,int remotePort)
     {

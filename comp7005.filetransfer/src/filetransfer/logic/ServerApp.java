@@ -1,23 +1,10 @@
 package filetransfer.logic;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.awt.Component;
-import java.io.File;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.swing.JOptionPane;
-import javax.swing.ProgressMonitor;
 
-import filetransfer.net.PullClient;
-import filetransfer.net.PullServer;
 import filetransfer.net.Server;
 
 public class ServerApp
@@ -61,7 +48,7 @@ public class ServerApp
         try
         {
             int portNumber = Integer.parseUnsignedInt(stringPort);
-            server = new AppPullServer(portNumber);
+            server = new AppServer(portNumber);
             JOptionPane.showMessageDialog(parentComponent,makeServerStartedMessage(portNumber),TITLE_START_SERVER_SUCCEEDED,JOptionPane.INFORMATION_MESSAGE);
         }
 

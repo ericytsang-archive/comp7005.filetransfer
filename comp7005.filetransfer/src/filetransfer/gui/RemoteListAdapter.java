@@ -29,7 +29,7 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
 
     // public interface: server methods
 
-    public void present(Component parentComponent,Collection<JsonableFile> files)
+    public void present(Collection<JsonableFile> files)
     {
         // add all the files in the current directory to a list to be returned
         LinkedList<ListItem> listItems = new LinkedList<>();
@@ -46,16 +46,25 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
                         @Override
                         public void run()
                         {
-                            present(parentComponent,clientApp.pullDirectoryFiles(parentComponent,file.getAbsolutePath()));
+                            present(clientApp.pullDirectoryFiles(getParentComponent(),file.getAbsolutePath()));
                         }
                     }.start());
             }
             else
             {
-                listItems.add(new FileListItem(file));
+                ListItem<?> item = new FileListItem(file);
+                listItems.add(item);
+                item.addActionListener(e ->
+                    new Thread()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            clientApp.pullFile(getParentComponent(),file.getAbsolutePath());
+                        }
+                    }.start());
             }
         }
-
         setListItems(listItems);
     }
 }
