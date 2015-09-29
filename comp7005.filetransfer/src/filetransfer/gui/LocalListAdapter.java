@@ -8,13 +8,13 @@ import filetransfer.gui.listitem.FileListItem;
 import filetransfer.gui.listitem.FolderListItem;
 import filetransfer.gui.listitem.ListItem;
 import filetransfer.gui.listitem.ParentFolderListItem;
-import filetransfer.logic.ClientAppLogic;
+import filetransfer.logic.ClientApp;
 
 public class LocalListAdapter extends LabeledScrollPane.Adapter
 {
-    private final ClientAppLogic clientApp;
+    private final ClientApp clientApp;
 
-    public LocalListAdapter(ClientAppLogic clientApp)
+    public LocalListAdapter(ClientApp clientApp)
     {
         this.clientApp = clientApp;
     }
@@ -28,15 +28,10 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
     @Override
     public String getInitialTitle()
     {
-        return getTitle();
+        return "Local Files:";
     }
 
     // private interface: support methods
-
-    public String getTitle()
-    {
-        return clientApp.getCurrentDirectory().getAbsolutePath();
-    }
 
     private List<ListItem> getDirectoryItems()
     {
@@ -52,7 +47,6 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
                 item.addActionListener(e -> {
                     clientApp.setCurrentDirectory(file);
                     setListItems(getDirectoryItems());
-                    setTitle(getTitle());
                 });
             }
             else
@@ -70,7 +64,6 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
             item.addActionListener(e -> {
                 clientApp.setCurrentDirectory(parentFile);
                 setListItems(getDirectoryItems());
-                setTitle(getTitle());
             });
         }
 

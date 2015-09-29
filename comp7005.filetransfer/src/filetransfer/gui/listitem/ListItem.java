@@ -1,9 +1,13 @@
 package filetransfer.gui.listitem;
 
+import org.json.JSONObject;
+
 import java.awt.Dimension;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+
+import filetransfer.logic.Jsonable;
 
 public abstract class ListItem<Model> extends JButton
 {

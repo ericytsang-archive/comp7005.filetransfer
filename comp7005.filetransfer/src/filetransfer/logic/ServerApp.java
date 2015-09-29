@@ -1,14 +1,21 @@
 package filetransfer.logic;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.awt.Component;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.LinkedList;
 
 import javax.swing.JOptionPane;
 
+import filetransfer.net.PullServer;
 import filetransfer.net.Server;
+import filetransfer.utils.JsonableUtils;
 
-public class ServerAppLogic
+public class ServerApp
 {
     // constants: dialog titles
     private static final String TITLE_START_SERVER_SUCCEEDED = "Successfully Started Server";
@@ -49,7 +56,7 @@ public class ServerAppLogic
         try
         {
             int portNumber = Integer.parseUnsignedInt(stringPort);
-            server = new Server(new ServerListener(),portNumber);
+            server = new MyPullServer(portNumber);
             JOptionPane.showMessageDialog(parentComponent,makeServerStartedMessage(portNumber),TITLE_START_SERVER_SUCCEEDED,JOptionPane.INFORMATION_MESSAGE);
         }
 
@@ -104,12 +111,59 @@ public class ServerAppLogic
 
     // private interface: inner classes
 
-    private static class ServerListener implements Server.Listener
+    private static class MyPullServer extends PullServer
     {
-        @Override
-        public void onAccept(Socket newSocket)
+        /**
+         * instantiates a server.
+         *
+         * @param listenPort port to bind the server to; connection requests
+         *                   received on this port will be accepted.
+         * @throws IOException when the server socket fails to bind to the given
+         *                     port.
+         */
+        public MyPullServer(int listenPort) throws IOException
         {
-            // todo: implement
+            super(listenPort);
+        }
+
+        @Override
+        protected String onPullRequest(Socket remote,String request)
+        {
+            try
+            {
+                JSONObject json = new JSONObject(request);
+                switch(json.getInt(Protocol.KEY_TYPE))
+                {
+                case Protocol.TYPE_PULL_DIR_FILES:
+                    return handlePullDirectoryFiles(json.getString(Protocol.KEY_PATH));
+                default:
+                    throw new RuntimeException("default case");
+                }
+            }
+            catch(JSONException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private String handlePullDirectoryFiles(String path)
+        {
+            // add all the files in the current directory to a list to be returned
+            LinkedList<JsonableFile> files = new LinkedList<>();
+            //noinspection ConstantConditions
+            for(File file : new File(path).listFiles())
+            {
+                files.add(new JsonableFile(file));
+            }
+
+            // put parent directory as element in list to be returned if it exists
+            File parentFile = new File(path).getAbsoluteFile().getParentFile();
+            if(parentFile != null)
+            {
+                files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
+            }
+
+            return JsonableUtils.toJsonArray(files).toString();
         }
     }
 }

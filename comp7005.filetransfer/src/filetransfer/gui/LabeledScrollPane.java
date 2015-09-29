@@ -68,6 +68,8 @@ public class LabeledScrollPane extends JPanel
         {
             labeledScrollPane.getScrolledPanel().removeAll();
             newListItems.forEach(labeledScrollPane.getScrolledPanel()::add);
+            labeledScrollPane.getScrolledPanel().revalidate();
+            labeledScrollPane.getScrolledPanel().repaint();
         }
     }
 

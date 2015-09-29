@@ -11,8 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
 
-import filetransfer.logic.ClientAppLogic;
-import filetransfer.logic.ServerAppLogic;
+import filetransfer.logic.ClientApp;
+import filetransfer.logic.ServerApp;
 
 public class AppWindow extends JFrame
 {
@@ -36,8 +36,8 @@ public class AppWindow extends JFrame
      */
     private static final String WINDOW_TITLE = "Eric's COMP 7005 Assignment 1";
 
-    private final ServerAppLogic serverApp;
-    private final ClientAppLogic clientApp;
+    private final ServerApp serverApp;
+    private final ClientApp clientApp;
 
     /**
      * creates and configures the application window, and initializes instance
@@ -48,8 +48,8 @@ public class AppWindow extends JFrame
         super(WINDOW_TITLE);
 
         // initialize instance data
-        serverApp = new ServerAppLogic();
-        clientApp = new ClientAppLogic();
+        serverApp = new ServerApp();
+        clientApp = new ClientApp();
 
         // create and configure application window
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -93,10 +93,10 @@ public class AppWindow extends JFrame
             JMenu clientOptionsMenu = new JMenu("Client");
             add(clientOptionsMenu);
 
-            // create the start server menu item & add it to the server menu
-            JMenuItem addServerMenuItem = new JMenuItem("Connect...");
-            addServerMenuItem.addActionListener(event -> clientApp.promptConnect(AppWindow.this));
-            clientOptionsMenu.add(addServerMenuItem);
+            // create the connect to server menu item & add it to the server menu
+            JMenuItem connectMenuItem = new JMenuItem("Connect...");
+            connectMenuItem.addActionListener(event -> clientApp.promptConnect(AppWindow.this));
+            clientOptionsMenu.add(connectMenuItem);
         }
     }
 
@@ -108,8 +108,8 @@ public class AppWindow extends JFrame
 
             // set the panel's layout manager & add components to the panel
             setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
-            add(new LabeledScrollPane(new LocalListAdapter(clientApp)));
-            add(new LabeledScrollPane(new RemoteListAdapter()));
+            add(new LabeledScrollPane(clientApp.getLocalListAdapter()));
+            add(new LabeledScrollPane(clientApp.getRemoteListAdapter()));
 
             // todo: remove the code below, and put it into the appropriate place (a view holder....)
             // example of how to create a context menu!
