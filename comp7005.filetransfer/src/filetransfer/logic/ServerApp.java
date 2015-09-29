@@ -13,7 +13,6 @@ import javax.swing.JOptionPane;
 
 import filetransfer.net.PullServer;
 import filetransfer.net.Server;
-import filetransfer.utils.JsonableUtils;
 
 public class ServerApp
 {

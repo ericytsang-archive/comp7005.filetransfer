@@ -16,7 +16,6 @@ import javax.swing.ProgressMonitor;
 import filetransfer.gui.LocalListAdapter;
 import filetransfer.gui.RemoteListAdapter;
 import filetransfer.net.PullClient;
-import filetransfer.utils.JsonableUtils;
 
 public class ClientApp
 {

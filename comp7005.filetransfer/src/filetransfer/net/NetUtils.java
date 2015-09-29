@@ -1,4 +1,4 @@
-package filetransfer.utils;
+package filetransfer.net;
 
 import java.io.IOException;
 import java.net.Socket;

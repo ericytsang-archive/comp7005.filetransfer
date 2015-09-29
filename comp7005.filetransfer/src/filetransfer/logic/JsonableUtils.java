@@ -1,4 +1,4 @@
-package filetransfer.utils;
+package filetransfer.logic;
 
 import org.json.JSONArray;
 import org.json.JSONException;

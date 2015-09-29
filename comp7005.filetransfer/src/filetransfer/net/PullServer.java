@@ -8,7 +8,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import filetransfer.logic.Protocol;
-import filetransfer.utils.NetUtils;
 
 public abstract class PullServer extends Server
 {
