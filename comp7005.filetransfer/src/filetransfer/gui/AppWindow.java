@@ -13,6 +13,19 @@ import javax.swing.WindowConstants;
 import filetransfer.logic.ClientApp;
 import filetransfer.logic.ServerApp;
 
+/**
+ * the application window, and entry point of the program.
+ *
+ * @file    AppWindow.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
+ * @class   AppWindow
+ *
+ * @date    2015-09-29T18:59:08-0800
+ *
+ * @author  Eric Tsang
+ */
 public class AppWindow extends JFrame
 {
     /**
@@ -35,12 +48,27 @@ public class AppWindow extends JFrame
      */
     private static final String WINDOW_TITLE = "Eric's COMP 7005 Assignment 1";
 
+    /**
+     * reference to the window's server logic instance.
+     */
     private final ServerApp serverApp;
+
+    /**
+     * reference to the window's client logic instance.
+     */
     private final ClientApp clientApp;
 
     /**
-     * creates and configures the application window, and initializes instance
-     *   data.
+     * creates, configures and shows the application window, and initializes
+     *   instance data.
+     *
+     * @method  AppWindow
+     *
+     * @date    2015-09-29T18:50:03-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @return  a new instance of AppWindow
      */
     public AppWindow()
     {
@@ -61,7 +89,13 @@ public class AppWindow extends JFrame
     /**
      * main method...
      *
-     * @param args unused command line arguments.
+     * @method  main
+     *
+     * @date    2015-09-29T18:53:43-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   args unused command line arguments.
      */
     public static void main(String[] args)
     {
@@ -70,6 +104,16 @@ public class AppWindow extends JFrame
 
     // private interface: inner classes
 
+    /**
+     * defines the option menu options along the top of the application's
+     *   window, as well as the menu items in each menu option.
+     *
+     * @class   MyMenuBar
+     *
+     * @date    2015-09-29T18:55:03-0800
+     *
+     * @author  Eric Tsang
+     */
     private class MyMenuBar extends JMenuBar
     {
         public MyMenuBar()
@@ -99,6 +143,16 @@ public class AppWindow extends JFrame
         }
     }
 
+    /**
+     * the rot component in the application window. it defines what goes into
+     *   the central section of the GUI.
+     *
+     * @class   MyMenuBar
+     *
+     * @date    2015-09-29T18:55:03-0800
+     *
+     * @author  Eric Tsang
+     */
     private class MyContentPane extends JPanel
     {
         public MyContentPane()

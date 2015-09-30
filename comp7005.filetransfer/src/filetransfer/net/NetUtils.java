@@ -8,16 +8,48 @@ import java.net.Socket;
 import filetransfer.logic.Protocol;
 
 /**
- * Created by Eric on 9/28/2015.
+ * provides static access to miscellaneous helper functions related to
+ *   networking.
+ *
+ * @method  affirm
+ *
+ * @class   NetUtils
+ *
+ * @date    2015-09-29T20:44:36-0800
+ *
+ * @author  Eric Tsang
  */
 public class NetUtils
 {
+    /**
+     * makes sure that the passed expression is true; the function will throw a
+     *   runtime exception
+     *
+     * @method  affirm
+     *
+     * @date    2015-09-29T20:34:16-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   b when false, the function will throw a runtime exception.
+     */
     public static void affirm(boolean b)
     {
-        if(!b)
-            throw new RuntimeException("affirmation failed!");
+        if(!b) throw new RuntimeException("affirmation failed!");
     }
 
+    /**
+     * waits for the passed socket to be closed by the remote host before
+     *   returning.
+     *
+     * @method  waitForClosure
+     *
+     * @date    2015-09-29T20:24:41-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   socket [description]
+     */
     public static void waitForClosure(Socket socket)
     {
         try
@@ -30,6 +62,24 @@ public class NetUtils
         }
     }
 
+    /**
+     * reads a string from the passed socket. this method is created because
+     *   readUTF would fail to read strings that are longer than
+     *   Integer.MAX_VALUE. strings read from the socket must be sent with the
+     *   sendString() function.
+     *
+     * @method  readString
+     *
+     * @date    2015-09-29T20:37:42-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   socket socket to read the string from.
+     *
+     * @return  the string read from the socket.
+     *
+     * @throws  IOException thrown when one occurs...
+     */
     public static String readString(Socket socket) throws IOException
     {
         // get the streams
@@ -59,6 +109,23 @@ public class NetUtils
         return stb.toString();
     }
 
+    /**
+     * writes a string to the passed socket. this method is created because
+     *   writeUTF would fail to write strings that are longer than
+     *   Integer.MAX_VALUE. strings sent to the socket must be read with the
+     *   readString() function.
+     *
+     * @method  sendString
+     *
+     * @date    2015-09-29T20:43:32-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   socket socket to send the string through.
+     * @param   string string to send through the socket.
+     *
+     * @throws  IOException thrown when one occurs...
+     */
     public static void sendString(Socket socket,String string) throws IOException
     {
         // get the streams

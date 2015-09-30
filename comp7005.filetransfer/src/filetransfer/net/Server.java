@@ -3,9 +3,21 @@ package filetransfer.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
+/**
+ * a server that is bound to a port, and will accept connection requests sent to
+ *   the port until the server is stopped.
+ *
+ * @file    Server.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
+ * @class   Server
+ *
+ * @date    2015-09-29T18:34:48-0800
+ *
+ * @author  Eric Tsang
+ */
 public abstract class Server
 {
     /**
@@ -16,13 +28,21 @@ public abstract class Server
     // public interface: constructors
 
     /**
-     * instantiates a server.
+     * instantiates a server that is bound to port {@code listenPort}.
      *
-     * @param listenPort   port to bind the server to; connection requests
+     * @method  Server
+     *
+     * @date    2015-09-29T18:06:09-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   listenPort port to bind the server to; connection requests
      *   received on this port will be accepted.
      *
-     * @throws IOException when the server socket fails to bind to the given
-     *   port.
+     * @return  new instance of Server
+     *
+     * @throws  IOException if the server fails to bind to port {@code
+     *   listenPort}
      */
     public Server(int listenPort) throws IOException
     {
@@ -38,7 +58,13 @@ public abstract class Server
     /**
      * closes the server socket, so it won't accept anymore new connections.
      *
-     * @throws IOException when the server socket is already closed.
+     * @method  stopServer
+     *
+     * @date    2015-09-29T18:30:52-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @throws  IOException thrown when the server was already stopped.
      */
     public void stopServer() throws IOException
     {
@@ -48,15 +74,29 @@ public abstract class Server
     // protected interface: callbacks
 
     /**
-     * observer that is can be registered with instances of this class, and is
-     * notified when a new connection is accepted by the server.
+     * callback invoked when a new connection is accepted by the server.
+     *
+     * @method  onAccept
+     *
+     * @date    2015-09-29T18:31:40-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   newSocket the socket that was just accepted by the server.
      */
     protected abstract void onAccept(Socket newSocket);
 
     // private instances: threads
 
     /**
-     * accepts any new connection requests forever.
+     * accepts connection requests from the server's server socket until the
+     *   server socket is closed.
+     *
+     * @class   AcceptThread
+     *
+     * @date    2015-09-29T18:32:12-0800
+     *
+     * @author  Eric Tsang
      */
     private class AcceptThread extends Thread
     {
