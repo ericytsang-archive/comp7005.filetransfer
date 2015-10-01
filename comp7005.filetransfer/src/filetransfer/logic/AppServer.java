@@ -29,11 +29,8 @@ public class AppServer extends Server
 
     public static void pullFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String path,File directory) throws IOException
     {
-        Socket socket = new Socket();
-
-        // perform the pull
-        //noinspection TryFinallyCanBeTryWithResources
-        try
+        // perform the pull; download a file from the server
+        try(Socket socket = new Socket())
         {
             // connect to the remote address
             socket.connect(remoteAddress);
@@ -52,27 +49,32 @@ public class AppServer extends Server
 
             // read the contents of the file until its empty
             File file = new File(directory,fileName);
-            FileOutputStream fos = new FileOutputStream(file);
-            byte[] buffer = new byte[MAX_SEGMENT_SIZE];
-            for(long bytesRead = 0; bytesRead < fileSize;)
+            try(FileOutputStream fos = new FileOutputStream(file))
             {
-                progressMonitor.setProgress((int) (((float) bytesRead)/((float) fileSize)*100.0));
-                int delta = is.read(buffer);
-                fos.write(buffer);
-                bytesRead += delta;
-            }
-            fos.close();
-        }
+                long totalBytesRead = 0;
+                boolean isEot = false;
+                byte[] fileData = new byte[MAX_SEGMENT_SIZE];
+                while(!isEot)
+                {
+                    // read the packet
+                    isEot = is.readBoolean();
+                    int bytesRead = is.read(fileData);
 
-        // close the socket
-        finally
-        {
-            socket.close();
+                    // write received bytes into the file
+                    fos.write(fileData,0,bytesRead);
+
+                    // update total bytes read & the progress monitor
+                    progressMonitor.setProgress((int) (((float) totalBytesRead)/((float) fileSize)*100.0));
+                    totalBytesRead += bytesRead;
+                }
+            }
         }
     }
 
-    private void handlePullFile(Socket socket) throws IOException
+    @SuppressWarnings("ThrowFromFinallyBlock")
+    private void handlePullFile(Socket socket)
     {
+        // handle a request to pull a file
         try
         {
             // get references to the streams
@@ -89,27 +91,51 @@ public class AppServer extends Server
             // read the contents of the file until its empty
             try(FileInputStream fis = new FileInputStream(fileToSend))
             {
+                boolean isEot;
                 byte[] buffer = new byte[MAX_SEGMENT_SIZE];
-                for(long bytesSent = 0; bytesSent < fileToSend.length(); )
+                do
                 {
+                    // gather data to create packet. it is important to check
+                    // that for bytes available after reading from the stream,
+                    // because we want to communicate to the remote host if this
+                    // packet is the last packet or not, and we don't want to
+                    // send an empty packet.
                     int delta = fis.read(buffer);
+                    isEot = fis.available() == 0;
+
+                    // send the packet
+                    os.writeBoolean(isEot);
                     os.write(buffer,0,delta);
-                    bytesSent += delta;
                 }
+                while(!isEot);
             }
 
             // wait for connection to close before closing ourselves and returning
             NetUtils.waitForClosure(socket);
         }
+
+        // we don't want an IOException to break the server...so we ignore it
+        catch(IOException e)
+        {
+            // do nothing...
+        }
+
+        // close the socket once we're done with it
         finally
         {
-            socket.close();
+            try
+            {
+                socket.close();
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public static void pushFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String directory,File fileToSend) throws IOException
     {
-
         // perform the push
         try(Socket socket = new Socket())
         {
@@ -121,55 +147,70 @@ public class AppServer extends Server
 
             // send the request & path
             os.writeInt(TYPE_PUSH_FILE);
-            os.writeLong(fileToSend.length());
             NetUtils.sendString(socket,directory);
             NetUtils.sendString(socket,fileToSend.getName());
 
             // read the contents of the file and send it all
             try(FileInputStream fis = new FileInputStream(fileToSend))
             {
+                long bytesSent = 0;
+                boolean isEot;
                 byte[] buffer = new byte[MAX_SEGMENT_SIZE];
-                for(long bytesSent = 0; bytesSent < fileToSend.length(); )
+                do
                 {
-                    progressMonitor.setProgress((int) (((float) bytesSent)/((float) fileToSend.length())*100.0));
+                    // gather data to create packet. it is important to check
+                    // that for bytes available after reading from the stream,
+                    // because we want to communicate to the remote host if this
+                    // packet is the last packet or not, and we don't want to
+                    // send an empty packet.
                     int delta = fis.read(buffer);
+                    isEot = fis.available() == 0;
+
+                    // send the packet
+                    os.writeBoolean(isEot);
                     os.write(buffer,0,delta);
+
+                    // update the progress monitor
                     bytesSent += delta;
+                    progressMonitor.setProgress((int) (((float) bytesSent)/((float) fileToSend.length())*100.0));
                 }
+                while(!isEot);
             }
 
             // wait for connection to close before closing ourselves and returning
             NetUtils.waitForClosure(socket);
-            socket.close();
         }
     }
 
+    @SuppressWarnings("ThrowFromFinallyBlock")
     public void handlePushFile(Socket socket)
     {
         // perform the pull
-        //noinspection TryFinallyCanBeTryWithResources
         try
         {
             // get handles to the streams
             DataInputStream is = new DataInputStream(socket.getInputStream());
-            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 
             // read the size of the file
-            long fileSize = is.readLong();
             String directory = NetUtils.readString(socket);
             String fileName = NetUtils.readString(socket);
 
             // read the contents of the file until its empty
             File file = new File(directory,fileName);
-            FileOutputStream fos = new FileOutputStream(file);
-            byte[] buffer = new byte[MAX_SEGMENT_SIZE];
-            for(long bytesRead = 0; bytesRead < fileSize;)
+            try(FileOutputStream fos = new FileOutputStream(file))
             {
-                int delta = is.read(buffer);
-                fos.write(buffer);
-                bytesRead += delta;
+                boolean isEot = false;
+                byte[] fileData = new byte[MAX_SEGMENT_SIZE];
+                while(!isEot)
+                {
+                    // read the packet
+                    isEot = is.readBoolean();
+                    int bytesRead = is.read(fileData);
+
+                    // write received bytes into the file
+                    fos.write(fileData,0,bytesRead);
+                }
             }
-            fos.close();
         }
 
         catch(IOException e)
@@ -186,18 +227,16 @@ public class AppServer extends Server
             }
             catch(IOException e)
             {
-                // do nothing...
+                throw new RuntimeException(e);
             }
         }
     }
 
     public static List<JsonableFile> pullDirectoryFiles(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String path) throws IOException
     {
-        Socket socket = new Socket();
 
         // perform the pull
-        //noinspection TryFinallyCanBeTryWithResources
-        try
+        try(Socket socket = new Socket())
         {
             // connect to the remote address
             progressMonitor.setProgress(0);
@@ -219,12 +258,6 @@ public class AppServer extends Server
             // parse the received response string and return
             progressMonitor.setProgress(4);
             return JsonableUtils.fromJsonArray(JsonableFile.class,new JSONArray(response));
-        }
-
-        // close the socket
-        finally
-        {
-            socket.close();
         }
     }
 
