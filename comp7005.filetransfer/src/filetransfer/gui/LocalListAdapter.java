@@ -2,7 +2,6 @@ package filetransfer.gui;
 
 import java.io.File;
 import java.util.LinkedList;
-import java.util.List;
 
 import filetransfer.gui.listitem.FileListItem;
 import filetransfer.gui.listitem.FolderListItem;
@@ -22,32 +21,33 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
     @Override
     protected void onSetLabeledScrollPane()
     {
-        setListItems(getDirectoryItems());
+        presentCurrentDirectory();
         setTitle("Local Files:");
     }
 
-    // private interface: support methods
+    // public interface: server methods
 
-    private List<ListItem> getDirectoryItems()
+    public void presentCurrentDirectory()
     {
         // add all the files in the current directory to a list to be returned
         LinkedList<ListItem> listItems = new LinkedList<>();
-        //noinspection ConstantConditions
+        LinkedList<ListItem> folderLis = new LinkedList<>();
+        LinkedList<ListItem> fileLis = new LinkedList<>();
         for(File file : clientApp.getCurrentDirectory().listFiles())
         {
             if(file.isDirectory())
             {
                 ListItem<?> item = new FolderListItem(file);
-                listItems.add(item);
+                folderLis.add(item);
                 item.addActionListener(e -> {
                     clientApp.setCurrentDirectory(file);
-                    setListItems(getDirectoryItems());
+                    presentCurrentDirectory();
                 });
             }
             else
             {
                 ListItem<?> item = new FileListItem(file);
-                listItems.add(item);
+                fileLis.add(item);
                 item.addActionListener(e ->
                     new Thread()
                     {
@@ -65,13 +65,15 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
         if(parentFile != null)
         {
             ListItem<?> item = new FolderListItem(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
-            listItems.addFirst(item);
+            folderLis.addFirst(item);
             item.addActionListener(e -> {
                 clientApp.setCurrentDirectory(parentFile);
-                setListItems(getDirectoryItems());
+                presentCurrentDirectory();
             });
         }
 
-        return listItems;
+        listItems.addAll(folderLis);
+        listItems.addAll(fileLis);
+        setListItems(listItems);
     }
 }
