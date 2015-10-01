@@ -55,13 +55,18 @@ public class AppServer extends Server
             try(FileOutputStream fos = new FileOutputStream(file))
             {
                 long totalBytesRead = 0;
-                boolean isEot = false;
+                int readResult;
                 byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
-                while(!isEot)
+                do
                 {
                     // read the packet
-                    isEot = is.readBoolean();
-                    int bytesRead = is.read(fileData);
+                    readResult = is.readInt();
+                    int bytesRead = 0;
+                    int bytesToRead = Math.max(0,readResult);
+                    while(bytesRead < bytesToRead)
+                    {
+                        bytesRead += is.read(fileData,bytesRead,bytesToRead-bytesRead);
+                    }
 
                     // write received bytes into the file
                     fos.write(fileData,0,bytesRead);
@@ -70,6 +75,7 @@ public class AppServer extends Server
                     progressMonitor.setProgress((int) (((float) totalBytesRead)/((float) fileSize)*100.0));
                     totalBytesRead += bytesRead;
                 }
+                while(readResult != -1);
             }
         }
     }
@@ -94,23 +100,18 @@ public class AppServer extends Server
             // read the contents of the file until its empty
             try(FileInputStream fis = new FileInputStream(fileToSend))
             {
-                boolean isEot;
-                byte[] buffer = new byte[MAX_FILE_SEGMENT_SIZE];
+                int readResult;
+                byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
                 do
                 {
-                    // gather data to create packet. it is important to check
-                    // that for bytes available after reading from the stream,
-                    // because we want to communicate to the remote host if this
-                    // packet is the last packet or not, and we don't want to
-                    // send an empty packet.
-                    int delta = fis.read(buffer);
-                    isEot = fis.available() == 0;
+                    // gather data to create packet
+                    readResult = fis.read(fileData);
 
                     // send the packet
-                    os.writeBoolean(isEot);
-                    os.write(buffer,0,delta);
+                    os.writeInt(readResult);
+                    os.write(fileData,0,readResult);
                 }
-                while(!isEot);
+                while(readResult != -1);
             }
 
             // wait for connection to close before closing ourselves and returning
