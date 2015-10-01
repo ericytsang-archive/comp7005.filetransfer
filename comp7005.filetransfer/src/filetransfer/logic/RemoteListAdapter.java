@@ -10,11 +10,11 @@ import filetransfer.gui.ListItem;
 
 public class RemoteListAdapter extends LabeledScrollPane.Adapter
 {
-    private final ClientApp clientApp;
+    private final ClientLogic clientLogic;
 
-    public RemoteListAdapter(ClientApp clientApp)
+    public RemoteListAdapter(ClientLogic clientLogic)
     {
-        this.clientApp = clientApp;
+        this.clientLogic = clientLogic;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
                         @Override
                         public void run()
                         {
-                            present(clientApp.pullDirectoryFiles(getParentComponent(),file.getAbsolutePath()));
+                            present(clientLogic.pullDirectoryFiles(getParentComponent(),file.getAbsolutePath()));
                         }
                     }.start());
             }
@@ -57,7 +57,7 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
                         @Override
                         public void run()
                         {
-                            clientApp.pullFile(getParentComponent(),file.getAbsolutePath());
+                            clientLogic.pullFile(getParentComponent(),file.getAbsolutePath());
                         }
                     }.start());
             }

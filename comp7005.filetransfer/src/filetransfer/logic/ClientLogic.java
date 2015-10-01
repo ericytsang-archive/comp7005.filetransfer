@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
-public class ClientApp
+public class ClientLogic
 {
     // constants: dialog prompts
     private static final String PROMPT_GET_REMOTE_HOSTNAME = "Enter remote IP address, or hostname:";
@@ -33,7 +33,7 @@ public class ClientApp
 
     // public interface: constructors
 
-    public ClientApp()
+    public ClientLogic()
     {
         currentDirectory = new File(".");
         currentRemoteDirectory = ".";

@@ -7,7 +7,7 @@ import javax.swing.JOptionPane;
 
 import filetransfer.net.Server;
 
-public class ServerApp
+public class ServerLogic
 {
     // constants: dialog titles
     private static final String TITLE_START_SERVER_SUCCEEDED = "Successfully Started Server";

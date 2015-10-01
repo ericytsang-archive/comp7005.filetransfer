@@ -1,7 +1,6 @@
 package filetransfer.gui;
 
 import java.awt.Dimension;
-import java.awt.GraphicsConfiguration;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -11,8 +10,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-import filetransfer.logic.ClientApp;
-import filetransfer.logic.ServerApp;
+import filetransfer.logic.ClientLogic;
+import filetransfer.logic.ServerLogic;
 
 /**
  * the application window, and entry point of the program.
@@ -52,12 +51,12 @@ public class AppWindow extends JFrame
     /**
      * reference to the window's server logic instance.
      */
-    private final ServerApp serverApp;
+    private final ServerLogic serverLogic;
 
     /**
      * reference to the window's client logic instance.
      */
-    private final ClientApp clientApp;
+    private final ClientLogic clientLogic;
 
     /**
      * creates, configures and shows the application window, and initializes
@@ -76,8 +75,8 @@ public class AppWindow extends JFrame
         super(WINDOW_TITLE);
 
         // initialize instance data
-        serverApp = new ServerApp();
-        clientApp = new ClientApp();
+        serverLogic = new ServerLogic();
+        clientLogic = new ClientLogic();
 
         // create and configure application window
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -127,13 +126,13 @@ public class AppWindow extends JFrame
             // create the start server menu item & add it to the server menu
             JMenuItem startMenuItem = new JMenuItem("Start");
             startMenuItem.setMnemonic('s');
-            startMenuItem.addActionListener(event -> serverApp.promptStartServer(AppWindow.this));
+            startMenuItem.addActionListener(event -> serverLogic.promptStartServer(AppWindow.this));
             serverOptionsMenu.add(startMenuItem);
 
             // create the stop server menu item & add it to the server menu
             JMenuItem stopMenuItem = new JMenuItem("Stop");
             stopMenuItem.setMnemonic('t');
-            stopMenuItem.addActionListener(event -> serverApp.stopServer(AppWindow.this));
+            stopMenuItem.addActionListener(event -> serverLogic.stopServer(AppWindow.this));
             serverOptionsMenu.add(stopMenuItem);
 
             // create the client menu & add it to the application window
@@ -144,7 +143,7 @@ public class AppWindow extends JFrame
             // create the connect to server menu item & add it to the server menu
             JMenuItem connectMenuItem = new JMenuItem("Connect...");
             connectMenuItem.setMnemonic('c');
-            connectMenuItem.addActionListener(event -> clientApp.promptConnect(AppWindow.this));
+            connectMenuItem.addActionListener(event -> clientLogic.promptConnect(AppWindow.this));
             clientOptionsMenu.add(connectMenuItem);
         }
     }
@@ -167,8 +166,8 @@ public class AppWindow extends JFrame
 
             // set the panel's layout manager & add components to the panel
             setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
-            add(new LabeledScrollPane(clientApp.getLocalListAdapter()));
-            add(new LabeledScrollPane(clientApp.getRemoteListAdapter()));
+            add(new LabeledScrollPane(clientLogic.getLocalListAdapter()));
+            add(new LabeledScrollPane(clientLogic.getRemoteListAdapter()));
         }
     }
 }
