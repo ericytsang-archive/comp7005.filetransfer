@@ -25,6 +25,10 @@ import filetransfer.net.Server;
  * when a new connection is created, the {@code onAccept} template method is
  *   invoked; subclasses of this class should override this method.
  *
+ * @file    ListItem.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
  * @class   AppServer
  *
  * @date    2015-10-01T09:24:29-0800

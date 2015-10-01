@@ -9,6 +9,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  *   to a JSON object, and should provide a user-defined method to parse the
  *   JSON back into the original object.
  *
+ * @file    ListItem.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
  * @class   Jsonable
  *
  * @date    2015-10-01T08:25:55-0800

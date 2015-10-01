@@ -15,6 +15,10 @@ import filetransfer.logic.Jsonable;
  * provides various functions that are useful regarding the {@code Jsonable}
  *   interface.
  *
+ * @file    ListItem.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
  * @class   JsonableUtils
  *
  * @date    2015-10-01T08:19:58-0800

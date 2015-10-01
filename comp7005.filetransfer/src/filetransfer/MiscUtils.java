@@ -1,5 +1,18 @@
 package filetransfer;
 
+/**
+ * provides static access to miscellaneous helper functions.
+ *
+ * @file    ListItem.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
+ * @class   MuscUtils
+ *
+ * @date    2015-10-01T09:35:34-0800
+ *
+ * @author  Eric Tsang
+ */
 public class MiscUtils
 {
     /**

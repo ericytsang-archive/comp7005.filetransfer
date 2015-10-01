@@ -8,6 +8,10 @@ import javax.swing.JButton;
 /**
  * a list item used to represent an object and can be displayed in a component.
  *
+ * @file    ListItem.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
  * @class   ListItem
  *
  * @date    2015-10-01T08:54:10-0800

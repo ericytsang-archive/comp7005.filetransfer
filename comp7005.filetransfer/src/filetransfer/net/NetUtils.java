@@ -11,11 +11,13 @@ import filetransfer.MiscUtils;
  * provides static access to miscellaneous helper functions related to
  *   networking.
  *
- * @method  affirm
+ * @file    NetUtils.java
+ *
+ * @program comp7005.filetransfer.jar
  *
  * @class   NetUtils
  *
- * @date    2015-09-29T20:44:36-0800
+ * @date    2015-10-01T09:31:35-0800
  *
  * @author  Eric Tsang
  */
