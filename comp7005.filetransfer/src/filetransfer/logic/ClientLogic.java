@@ -37,6 +37,7 @@ public class ClientLogic
     {
         currentDirectory = new File(".");
         currentRemoteDirectory = ".";
+        remoteAddress = new InetSocketAddress("0.0.0.0",0);
         localListAdapter = new LocalListAdapter(this);
         remoteListAdapter = new RemoteListAdapter(this);
         threadPoolExecutor = new ThreadPoolExecutor(1,1,1,TimeUnit.SECONDS,new LinkedBlockingQueue<>());
