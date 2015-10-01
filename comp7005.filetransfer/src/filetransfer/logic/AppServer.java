@@ -273,17 +273,19 @@ public class AppServer extends Server
     {
         // read the path from the socket
         String path = NetUtils.readString(socket);
+        File directory = path.equals(".")
+                ? new File(path).getAbsoluteFile().getParentFile() : new File(path);
 
         // add all the files in the specified directory to a list to be returned
         LinkedList<JsonableFile> files = new LinkedList<>();
         //noinspection ConstantConditions
-        for(File file : new File(path).listFiles())
+        for(File file : directory.listFiles())
         {
             files.add(new JsonableFile(file));
         }
 
         // put parent directory as element in list to be returned if it exists
-        File parentFile = new File(path).getAbsoluteFile().getParentFile();
+        File parentFile = directory.getParentFile();
         if(parentFile != null)
         {
             files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));

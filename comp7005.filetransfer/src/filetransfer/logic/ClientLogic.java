@@ -47,7 +47,9 @@ public class ClientLogic
 
     public File getCurrentDirectory()
     {
-        return currentDirectory;
+        return currentDirectory.getName().equals(".")
+                ? currentDirectory.getAbsoluteFile().getParentFile()
+                : currentDirectory;
     }
 
     public void setCurrentDirectory(File newDirectory)
