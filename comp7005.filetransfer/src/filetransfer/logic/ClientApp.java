@@ -13,9 +13,6 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
-import filetransfer.gui.LocalListAdapter;
-import filetransfer.gui.RemoteListAdapter;
-
 public class ClientApp
 {
     // constants: dialog prompts

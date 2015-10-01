@@ -1,16 +1,12 @@
-package filetransfer.gui;
+package filetransfer.logic;
 
-import java.awt.Component;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 
-import filetransfer.gui.listitem.FileListItem;
-import filetransfer.gui.listitem.FolderListItem;
-import filetransfer.gui.listitem.ListItem;
-import filetransfer.logic.ClientApp;
-import filetransfer.logic.JsonableFile;
+import filetransfer.gui.LabeledScrollPane;
+import filetransfer.gui.FileListItem;
+import filetransfer.gui.FolderListItem;
+import filetransfer.gui.ListItem;
 
 public class RemoteListAdapter extends LabeledScrollPane.Adapter
 {

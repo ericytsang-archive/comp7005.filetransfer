@@ -2,9 +2,6 @@ package filetransfer.gui;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ContainerEvent;
-import java.awt.event.ContainerListener;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -12,8 +9,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
-
-import filetransfer.gui.listitem.ListItem;
 
 public class LabeledScrollPane extends JPanel
 {

@@ -1,4 +1,4 @@
-package filetransfer.gui.listitem;
+package filetransfer.gui;
 
 import org.json.JSONObject;
 

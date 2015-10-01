@@ -1,4 +1,4 @@
-package filetransfer.gui.listitem;
+package filetransfer.gui;
 
 import java.io.File;
 
@@ -9,16 +9,16 @@ import filetransfer.logic.JsonableFile;
 /**
  * Created by Eric on 9/25/2015.
  */
-public class FolderListItem extends ListItem<JsonableFile>
+public class FileListItem extends ListItem<JsonableFile>
 {
-    private static final ImageIcon DEFAULT_ICON = new ImageIcon("./res/icons/folder.png");
+    private static final ImageIcon DEFAULT_ICON = new ImageIcon("./res/icons/file.png");
 
-    public FolderListItem(JsonableFile file)
+    public FileListItem(JsonableFile file)
     {
         super(file);
     }
 
-    public FolderListItem(File file)
+    public FileListItem(File file)
     {
         super(new JsonableFile(file));
     }

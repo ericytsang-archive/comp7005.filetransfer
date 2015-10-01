@@ -1,13 +1,12 @@
-package filetransfer.gui;
+package filetransfer.logic;
 
 import java.io.File;
 import java.util.LinkedList;
 
-import filetransfer.gui.listitem.FileListItem;
-import filetransfer.gui.listitem.FolderListItem;
-import filetransfer.gui.listitem.ListItem;
-import filetransfer.logic.ClientApp;
-import filetransfer.logic.JsonableFile;
+import filetransfer.gui.LabeledScrollPane;
+import filetransfer.gui.FileListItem;
+import filetransfer.gui.FolderListItem;
+import filetransfer.gui.ListItem;
 
 public class LocalListAdapter extends LabeledScrollPane.Adapter
 {
@@ -27,6 +26,7 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
 
     // public interface: server methods
 
+    @SuppressWarnings("ConstantConditions")
     public void presentCurrentDirectory()
     {
         // add all the files in the current directory to a list to be returned
