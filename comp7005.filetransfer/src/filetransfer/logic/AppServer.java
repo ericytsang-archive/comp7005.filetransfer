@@ -61,19 +61,22 @@ public class AppServer extends Server
                 {
                     // read the packet
                     readResult = is.readInt();
-                    int bytesRead = 0;
-                    int bytesToRead = Math.max(0,readResult);
-                    while(bytesRead < bytesToRead)
-                    {
-                        bytesRead += is.read(fileData,bytesRead,bytesToRead-bytesRead);
-                    }
+                    int segmentSize = Math.max(0,readResult);
+                    is.readFully(fileData,0,segmentSize);
 
                     // write received bytes into the file
-                    fos.write(fileData,0,bytesRead);
+                    fos.write(fileData,0,segmentSize);
 
                     // update total bytes read & the progress monitor
                     progressMonitor.setProgress((int) (((float) totalBytesRead)/((float) fileSize)*100.0));
-                    totalBytesRead += bytesRead;
+                    totalBytesRead += segmentSize;
+
+                    // stop the download if it is cancelled
+                    if(progressMonitor.isCanceled())
+                    {
+                        socket.close();
+                        break;
+                    }
                 }
                 while(readResult != -1);
             }
@@ -106,10 +109,11 @@ public class AppServer extends Server
                 {
                     // gather data to create packet
                     readResult = fis.read(fileData);
+                    int segmentSize = Math.max(0,readResult);
 
                     // send the packet
                     os.writeInt(readResult);
-                    os.write(fileData,0,readResult);
+                    os.write(fileData,0,segmentSize);
                 }
                 while(readResult != -1);
             }
@@ -158,27 +162,24 @@ public class AppServer extends Server
             try(FileInputStream fis = new FileInputStream(fileToSend))
             {
                 long bytesSent = 0;
-                boolean isEot;
+                int readResult;
                 byte[] buffer = new byte[MAX_FILE_SEGMENT_SIZE];
                 do
                 {
-                    // gather data to create packet. it is important to check
-                    // that for bytes available after reading from the stream,
-                    // because we want to communicate to the remote host if this
-                    // packet is the last packet or not, and we don't want to
-                    // send an empty packet.
-                    int delta = fis.read(buffer);
-                    isEot = fis.available() == 0;
+                    // gather data to create packet...if the upload is
+                    // cancelled, tell the client that it is eof
+                    readResult = fis.read(buffer);
+                    int segmentSize = Math.max(0,readResult);
 
                     // send the packet
-                    os.writeBoolean(isEot);
-                    os.write(buffer,0,delta);
+                    os.writeInt(readResult);
+                    os.write(buffer,0,segmentSize);
 
                     // update the progress monitor
-                    bytesSent += delta;
+                    bytesSent += segmentSize;
                     progressMonitor.setProgress((int) (((float) bytesSent)/((float) fileToSend.length())*100.0));
                 }
-                while(!isEot);
+                while(readResult != -1);
             }
 
             // wait for connection to close before closing ourselves and returning
@@ -203,17 +204,19 @@ public class AppServer extends Server
             File file = new File(directory,fileName);
             try(FileOutputStream fos = new FileOutputStream(file))
             {
-                boolean isEot = false;
+                int readResult;
                 byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
-                while(!isEot)
+                do
                 {
                     // read the packet
-                    isEot = is.readBoolean();
-                    int bytesRead = is.read(fileData);
+                    readResult = is.readInt();
+                    int segmentSize = Math.max(0,readResult);
+                    is.readFully(fileData,0,segmentSize);
 
                     // write received bytes into the file
-                    fos.write(fileData,0,bytesRead);
+                    fos.write(fileData,0,segmentSize);
                 }
+                while(readResult != -1);
             }
         }
 
