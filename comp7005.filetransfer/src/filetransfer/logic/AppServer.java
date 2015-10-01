@@ -43,10 +43,12 @@ public class AppServer extends Server
      * indicates to the server that we want to pull the files in a directory.
      */
     private static final int TYPE_PULL_DIR_FILES = 0;
+
     /**
      * indicates to the server that we want to download a file.
      */
     private static final int TYPE_PULL_FILE = 1;
+
     /**
      * indicates to the server that we want to upload a file.
      */
@@ -122,33 +124,42 @@ public class AppServer extends Server
      *
      * @throws  IOException thrown when an IOException occurs.
      */
+    @SuppressWarnings("ThrowFromFinallyBlock")
     private void handlePullDirectoryFiles(Socket socket) throws IOException
     {
-        // read the path from the socket
-        String path = NetUtils.readString(socket);
-        File directory = path.equals(".")
-                ? new File(path).getAbsoluteFile().getParentFile() : new File(path);
-
-        // add all the files in the specified directory to a list to be returned
-        LinkedList<JsonableFile> files = new LinkedList<>();
-        //noinspection ConstantConditions
-        for(File file : directory.listFiles())
+        try
         {
-            files.add(new JsonableFile(file));
+            // read the path from the socket
+            String path = NetUtils.readString(socket);
+            File directory = path.equals(".")
+                    ? new File(path).getAbsoluteFile().getParentFile()
+                    : new File(path);
+
+            // add all the files in the specified directory to a list to be returned
+            LinkedList<JsonableFile> files = new LinkedList<>();
+            //noinspection ConstantConditions
+            for(File file : directory.listFiles())
+            {
+                files.add(new JsonableFile(file));
+            }
+
+            // put parent directory as element in list to be returned if it exists
+            File parentFile = directory.getParentFile();
+            if(parentFile != null)
+            {
+                files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
+            }
+
+            // serialize the list of files, and send it back, and wait for the
+            // connection to close before closing ourselves and returning
+            NetUtils.sendString(socket,JsonableUtils.toJsonArray(files).toString());
+            NetUtils.waitForClosure(socket);
         }
 
-        // put parent directory as element in list to be returned if it exists
-        File parentFile = directory.getParentFile();
-        if(parentFile != null)
+        finally
         {
-            files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
+            socket.close();
         }
-
-        // serialize the list of files, and send it back, and wait for the
-        // connection to close before closing ourselves and returning
-        NetUtils.sendString(socket,JsonableUtils.toJsonArray(files).toString());
-        NetUtils.waitForClosure(socket);
-        socket.close();
     }
 
     /**
@@ -232,7 +243,7 @@ public class AppServer extends Server
      * @param   socket the connection that has issued the request.
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
-    private void handlePullFile(Socket socket)
+    private void handlePullFile(Socket socket) throws IOException
     {
         // handle a request to pull a file
         try
@@ -270,23 +281,10 @@ public class AppServer extends Server
             NetUtils.waitForClosure(socket);
         }
 
-        // we don't want an IOException to break the server...so we ignore it
-        catch(IOException e)
-        {
-            // do nothing...
-        }
-
         // close the socket once we're done with it
         finally
         {
-            try
-            {
-                socket.close();
-            }
-            catch(IOException e)
-            {
-                throw new RuntimeException(e);
-            }
+            socket.close();
         }
     }
 
@@ -364,7 +362,7 @@ public class AppServer extends Server
      * @param   socket the connection that has issued the request.
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
-    private void handlePushFile(Socket socket)
+    private void handlePushFile(Socket socket) throws IOException
     {
         // perform the pull
         try
@@ -396,22 +394,10 @@ public class AppServer extends Server
             }
         }
 
-        catch(IOException e)
-        {
-            // do nothing...
-        }
-
         // close the socket
         finally
         {
-            try
-            {
-                socket.close();
-            }
-            catch(IOException e)
-            {
-                throw new RuntimeException(e);
-            }
+            socket.close();
         }
     }
 

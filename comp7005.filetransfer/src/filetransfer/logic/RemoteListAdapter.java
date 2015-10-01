@@ -17,6 +17,16 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
         this.clientLogic = clientLogic;
     }
 
+    /**
+     * template method that is invoked when the adapter is bound to a
+     *   labeled scroll pane.
+     *
+     * @method  onSetLabeledScrollPane
+     *
+     * @date    2015-10-01T09:47:46-0800
+     *
+     * @author  Eric Tsang
+     */
     @Override
     protected void onSetLabeledScrollPane()
     {
@@ -25,6 +35,17 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
 
     // public interface: server methods
 
+    /**
+     * presents the passed files in the scroll pane.
+     *
+     * @method  present
+     *
+     * @date    2015-10-01T09:42:16-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   files a collection f files to display.
+     */
     public void present(Collection<JsonableFile> files)
     {
         // add all the files in the current directory to a list to be returned
