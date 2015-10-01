@@ -168,7 +168,8 @@ public class AppServer extends Server
                 {
                     // gather data to create packet...if the upload is
                     // cancelled, tell the client that it is eof
-                    readResult = fis.read(buffer);
+                    readResult = !progressMonitor.isCanceled()
+                            ? fis.read(buffer) : -1;
                     int segmentSize = Math.max(0,readResult);
 
                     // send the packet
