@@ -2,7 +2,9 @@ package filetransfer.gui;
 
 import java.io.File;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.UIManager;
 
 import filetransfer.logic.JsonableFile;
 
@@ -11,7 +13,7 @@ import filetransfer.logic.JsonableFile;
  */
 public class FileListItem extends ListItem<JsonableFile>
 {
-    private static final ImageIcon DEFAULT_ICON = new ImageIcon("./res/icons/file.png");
+    private static final Icon DEFAULT_ICON = UIManager.getIcon("FileView.fileIcon");
 
     public FileListItem(JsonableFile file)
     {
@@ -24,7 +26,7 @@ public class FileListItem extends ListItem<JsonableFile>
     }
 
     @Override
-    public ImageIcon getListItemIcon()
+    public Icon getListItemIcon()
     {
         return DEFAULT_ICON;
     }

@@ -21,12 +21,12 @@ import filetransfer.net.Server;
 public class AppServer extends Server
 {
     // constants: network operation IDs indicate network operation to performed
-    public static final int TYPE_PULL_DIR_FILES = 0;
-    public static final int TYPE_PULL_FILE = 1;
-    public static final int TYPE_PUSH_FILE = 2;
+    private static final int TYPE_PULL_DIR_FILES = 0;
+    private static final int TYPE_PULL_FILE = 1;
+    private static final int TYPE_PUSH_FILE = 2;
 
     // constants: protocol parameters
-    public static final int MAX_FILE_SEGMENT_SIZE = 1024;
+    private static final int MAX_FILE_SEGMENT_SIZE = 1024;
 
     // public interface: network operations & associated handlers
 
@@ -189,7 +189,7 @@ public class AppServer extends Server
     }
 
     @SuppressWarnings("ThrowFromFinallyBlock")
-    public void handlePushFile(Socket socket)
+    private void handlePushFile(Socket socket)
     {
         // perform the pull
         try

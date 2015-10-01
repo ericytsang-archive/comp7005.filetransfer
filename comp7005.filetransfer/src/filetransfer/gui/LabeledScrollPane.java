@@ -65,12 +65,12 @@ public class LabeledScrollPane extends JPanel
 
         protected abstract void onSetLabeledScrollPane();
 
-        public final void setTitle(String newTitle)
+        protected final void setTitle(String newTitle)
         {
             labeledScrollPane.getLabel().setText(newTitle);
         }
 
-        public final void setListItems(List<ListItem> newListItems)
+        protected final void setListItems(List<ListItem> newListItems)
         {
             labeledScrollPane.getScrolledPanel().removeAll();
             newListItems.forEach(labeledScrollPane.getScrolledPanel()::add);
@@ -79,7 +79,7 @@ public class LabeledScrollPane extends JPanel
             getParentComponent().repaint();
         }
 
-        public final Component getParentComponent()
+        protected final Component getParentComponent()
         {
             if(labeledScrollPane.getRootPane() != null)
             {

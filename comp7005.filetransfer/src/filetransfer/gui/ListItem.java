@@ -1,13 +1,9 @@
 package filetransfer.gui;
 
-import org.json.JSONObject;
-
 import java.awt.Dimension;
 
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 import javax.swing.JButton;
-
-import filetransfer.logic.Jsonable;
 
 public abstract class ListItem<Model> extends JButton
 {
@@ -24,8 +20,8 @@ public abstract class ListItem<Model> extends JButton
         setHorizontalAlignment(JButton.LEFT);
     }
 
-    public abstract ImageIcon getListItemIcon();
-    public abstract String getListItemLabel();
+    protected abstract Icon getListItemIcon();
+    protected abstract String getListItemLabel();
     public final Model getListItemModel()
     {
         return model;
