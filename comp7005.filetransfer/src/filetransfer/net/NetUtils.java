@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import filetransfer.logic.Protocol;
+import filetransfer.MiscUtils;
 
 /**
  * provides static access to miscellaneous helper functions related to
@@ -21,22 +21,29 @@ import filetransfer.logic.Protocol;
  */
 public class NetUtils
 {
+    // constants: packet control characters
+
     /**
-     * makes sure that the passed expression is true; the function will throw a
-     *   runtime exception
+     * indicates that there are more packets to follow.
      *
-     * @method  affirm
-     *
-     * @date    2015-09-29T20:34:16-0800
-     *
-     * @author  Eric Tsang
-     *
-     * @param   b when false, the function will throw a runtime exception.
+     * this is only used to transfer strings...
      */
-    public static void affirm(boolean b)
-    {
-        if(!b) throw new RuntimeException("affirmation failed!");
-    }
+    public static final String CONTROL_CONTINUE = "a";
+
+    /**
+     * indicates that this packet is the last packet of the network operation.
+     *
+     * this is only used to transfer strings...
+     */
+    public static final String CONTROL_EOT = "b";
+
+    // constants: packet parameters
+
+    /**
+     * maximum number of characters allowed to be sent using the wruteUTF method
+     *   before it is fragmented by application level code.
+     */
+    public static final int MAX_STRING_SEGMENT_LENGTH = Integer.MAX_VALUE-100;
 
     /**
      * waits for the passed socket to be closed by the remote host before
@@ -54,7 +61,7 @@ public class NetUtils
     {
         try
         {
-            affirm(socket.getInputStream().read() == -1);
+            MiscUtils.affirm(socket.getInputStream().read() == -1);
         }
         catch(IOException e)
         {
@@ -96,10 +103,10 @@ public class NetUtils
             // handle packet
             switch(segmentHeader)
             {
-            case Protocol.CONTROL_CONTINUE:
+            case CONTROL_CONTINUE:
                 stb.append(segmentBody);
                 break;
-            case Protocol.CONTROL_EOT:
+            case CONTROL_EOT:
                 stb.append(segmentBody);
                 break loop;
             default:
@@ -134,17 +141,17 @@ public class NetUtils
         // send the string
         for(int cursor = 0; cursor < string.length();)
         {
-            String segment = string.substring(cursor,Math.min(string.length(),cursor+Protocol.SEGMENT_LENGTH));
+            String segment = string.substring(cursor,Math.min(string.length(),cursor+MAX_STRING_SEGMENT_LENGTH));
             cursor += segment.length();
 
             // send segment header
             if(cursor < string.length())
             {
-                os.writeUTF(Protocol.CONTROL_CONTINUE);
+                os.writeUTF(CONTROL_CONTINUE);
             }
             else
             {
-                os.writeUTF(Protocol.CONTROL_EOT);
+                os.writeUTF(CONTROL_EOT);
             }
 
             // send segment body

@@ -18,19 +18,152 @@ import javax.swing.ProgressMonitor;
 import filetransfer.net.NetUtils;
 import filetransfer.net.Server;
 
+/**
+ * listens to a specified port on the host, and accepts any connection requests
+ *   received from it.
+ *
+ * when a new connection is created, the {@code onAccept} template method is
+ *   invoked; subclasses of this class should override this method.
+ *
+ * @class   AppServer
+ *
+ * @date    2015-10-01T09:24:29-0800
+ *
+ * @author  Eric Tsang
+ */
 public class AppServer extends Server
 {
     // constants: network operation IDs indicate network operation to performed
+
+    /**
+     * indicates to the server that we want to pull the files in a directory.
+     */
     private static final int TYPE_PULL_DIR_FILES = 0;
+    /**
+     * indicates to the server that we want to download a file.
+     */
     private static final int TYPE_PULL_FILE = 1;
+    /**
+     * indicates to the server that we want to upload a file.
+     */
     private static final int TYPE_PUSH_FILE = 2;
 
     // constants: protocol parameters
+
+    /**
+     * the maximum number of bytes to send per segment when transferring a file.
+     */
     private static final int MAX_FILE_SEGMENT_SIZE = 1024;
 
     // public interface: network operations & associated handlers
 
-    public static void pullFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String path,File directory) throws IOException
+    /**
+     * pulls the list of files that exists in the directory on the remote host.
+     *
+     * @method  pullDirectoryFiles
+     *
+     * @date    2015-10-01T09:10:11-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   remoteAddress the address of the remote host to connect to.
+     * @param   progressMonitor updated to display the operation's progress.
+     * @param   directoryPath path to the directory on the remote host.
+     *
+     * @return  the list of files that exists in the directory on the remote
+     *   host.
+     *
+     * @throws  IOException thrown when an IOException occurs.
+     */
+    public static List<JsonableFile> pullDirectoryFiles(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String directoryPath) throws IOException
+    {
+
+        // perform the pull
+        try(Socket socket = new Socket())
+        {
+            // connect to the remote address
+            progressMonitor.setProgress(0);
+            socket.connect(remoteAddress);
+
+            // get handles to the streams
+            progressMonitor.setProgress(1);
+            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+
+            // send the request & directory path
+            progressMonitor.setProgress(2);
+            os.writeInt(TYPE_PULL_DIR_FILES);
+            NetUtils.sendString(socket,directoryPath);
+
+            // read the server's json response
+            progressMonitor.setProgress(3);
+            String response = NetUtils.readString(socket);
+
+            // parse the received response string and return
+            progressMonitor.setProgress(4);
+            return JsonableUtils.fromJsonArray(JsonableFile.class,new JSONArray(response));
+        }
+    }
+
+    /**
+     * invoked to handle a connection that has issued a pull directory files
+     *   request.
+     *
+     * @method  handlePullDirectoryFiles
+     *
+     * @date    2015-10-01T09:15:40-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   socket the connection that has issued the request.
+     *
+     * @throws  IOException thrown when an IOException occurs.
+     */
+    private void handlePullDirectoryFiles(Socket socket) throws IOException
+    {
+        // read the path from the socket
+        String path = NetUtils.readString(socket);
+        File directory = path.equals(".")
+                ? new File(path).getAbsoluteFile().getParentFile() : new File(path);
+
+        // add all the files in the specified directory to a list to be returned
+        LinkedList<JsonableFile> files = new LinkedList<>();
+        //noinspection ConstantConditions
+        for(File file : directory.listFiles())
+        {
+            files.add(new JsonableFile(file));
+        }
+
+        // put parent directory as element in list to be returned if it exists
+        File parentFile = directory.getParentFile();
+        if(parentFile != null)
+        {
+            files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
+        }
+
+        // serialize the list of files, and send it back, and wait for the
+        // connection to close before closing ourselves and returning
+        NetUtils.sendString(socket,JsonableUtils.toJsonArray(files).toString());
+        NetUtils.waitForClosure(socket);
+        socket.close();
+    }
+
+    /**
+     * downloads the specified file from the server.
+     *
+     * @method  pullFile
+     *
+     * @date    2015-10-01T08:58:48-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   remoteAddress the address of the remote host to connect to.
+     * @param   progressMonitor updated to display the operation's progress.
+     * @param   remoteFilePath path to file on the remote server.
+     * @param   directory local directory to save the pulled file to.
+     *
+     * @throws  IOException thrown when an IOExceptoin occurs.
+     */
+    public static void pullFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String remoteFilePath,File directory) throws IOException
     {
         // perform the pull; download a file from the server
         try(Socket socket = new Socket())
@@ -42,9 +175,9 @@ public class AppServer extends Server
             DataInputStream is = new DataInputStream(socket.getInputStream());
             DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 
-            // send the request & path
+            // send the request & remoteFilePath
             os.writeInt(TYPE_PULL_FILE);
-            NetUtils.sendString(socket,path);
+            NetUtils.sendString(socket,remoteFilePath);
 
             // read the size of the file
             long fileSize = is.readLong();
@@ -83,6 +216,17 @@ public class AppServer extends Server
         }
     }
 
+    /**
+     * invoked to handle a connection that has issued a pull request.
+     *
+     * @method  handlePullFile
+     *
+     * @date    2015-10-01T09:01:52-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   socket the connection that has issued the request.
+     */
     @SuppressWarnings("ThrowFromFinallyBlock")
     private void handlePullFile(Socket socket)
     {
@@ -142,6 +286,22 @@ public class AppServer extends Server
         }
     }
 
+    /**
+     * pushes a local file to the remote server at the specified address.
+     *
+     * @method  pushFile
+     *
+     * @date    2015-10-01T09:02:54-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   remoteAddress the address of the remote host to connect to.
+     * @param   progressMonitor updated to display the operation's progress.
+     * @param   directory directory on the remote server to save the file to.
+     * @param   fileToSend local file to send to the remote server.
+     *
+     * @throws  IOException thrown when an IOExeption occurs.
+     */
     public static void pushFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String directory,File fileToSend) throws IOException
     {
         // perform the push
@@ -188,6 +348,17 @@ public class AppServer extends Server
         }
     }
 
+    /**
+     * invoked to handle a connection that has issued a push request.
+     *
+     * @method  handlePushFile
+     *
+     * @date    2015-10-01T09:05:25-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   socket the connection that has issued the request.
+     */
     @SuppressWarnings("ThrowFromFinallyBlock")
     private void handlePushFile(Socket socket)
     {
@@ -240,73 +411,24 @@ public class AppServer extends Server
         }
     }
 
-    public static List<JsonableFile> pullDirectoryFiles(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String path) throws IOException
-    {
-
-        // perform the pull
-        try(Socket socket = new Socket())
-        {
-            // connect to the remote address
-            progressMonitor.setProgress(0);
-            socket.connect(remoteAddress);
-
-            // get handles to the streams
-            progressMonitor.setProgress(1);
-            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
-
-            // send the request & path
-            progressMonitor.setProgress(2);
-            os.writeInt(TYPE_PULL_DIR_FILES);
-            NetUtils.sendString(socket,path);
-
-            // read the server's json response
-            progressMonitor.setProgress(3);
-            String response = NetUtils.readString(socket);
-
-            // parse the received response string and return
-            progressMonitor.setProgress(4);
-            return JsonableUtils.fromJsonArray(JsonableFile.class,new JSONArray(response));
-        }
-    }
-
-    private void handlePullDirectoryFiles(Socket socket) throws IOException
-    {
-        // read the path from the socket
-        String path = NetUtils.readString(socket);
-        File directory = path.equals(".")
-                ? new File(path).getAbsoluteFile().getParentFile() : new File(path);
-
-        // add all the files in the specified directory to a list to be returned
-        LinkedList<JsonableFile> files = new LinkedList<>();
-        //noinspection ConstantConditions
-        for(File file : directory.listFiles())
-        {
-            files.add(new JsonableFile(file));
-        }
-
-        // put parent directory as element in list to be returned if it exists
-        File parentFile = directory.getParentFile();
-        if(parentFile != null)
-        {
-            files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
-        }
-
-        // serialize the list of files, and send it back, and wait for the
-        // connection to close before closing ourselves and returning
-        NetUtils.sendString(socket,JsonableUtils.toJsonArray(files).toString());
-        NetUtils.waitForClosure(socket);
-        socket.close();
-    }
-
     // public interface: constructors
 
     /**
      * instantiates a server.
      *
-     * @param listenPort port to bind the server to; connection requests
-     *                   received on this port will be accepted.
-     * @throws IOException when the server socket fails to bind to the given
-     *                     port.
+     * @method  AppServer
+     *
+     * @date    2015-10-01T09:17:15-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   listenPort port to bind the server to; connection requests
+     *   received on this port will be accepted.
+     *
+     * @return  a new instance of the Server class.
+     *
+     * @throws  IOException when the server socket fails to bind to the given
+     *   port.
      */
     public AppServer(int listenPort) throws IOException
     {
@@ -315,6 +437,17 @@ public class AppServer extends Server
 
     // protected interface: template method implementations
 
+    /**
+     * callback invoked when a new connection is accepted by the server.
+     *
+     * @method  onAccept
+     *
+     * @date    2015-09-29T18:31:40-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   newSocket the socket that was just accepted by the server.
+     */
     @Override
     protected void onAccept(Socket newSocket)
     {
