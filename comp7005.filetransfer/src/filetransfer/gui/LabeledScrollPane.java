@@ -2,6 +2,9 @@ package filetransfer.gui;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ContainerEvent;
+import java.awt.event.ContainerListener;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -76,13 +79,21 @@ public class LabeledScrollPane extends JPanel
         {
             labeledScrollPane.getScrolledPanel().removeAll();
             newListItems.forEach(labeledScrollPane.getScrolledPanel()::add);
-            labeledScrollPane.getScrolledPanel().revalidate();
-            labeledScrollPane.getScrolledPanel().repaint();
+            labeledScrollPane.setPreferredSize(new Dimension(0,0));
+            getParentComponent().revalidate();
+            getParentComponent().repaint();
         }
 
         public final Component getParentComponent()
         {
-            return labeledScrollPane;
+            if(labeledScrollPane.getRootPane() != null)
+            {
+                return labeledScrollPane.getRootPane();
+            }
+            else
+            {
+                return labeledScrollPane;
+            }
         }
     }
 }

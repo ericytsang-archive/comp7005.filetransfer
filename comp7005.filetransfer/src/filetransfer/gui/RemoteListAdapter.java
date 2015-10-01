@@ -33,13 +33,14 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
     {
         // add all the files in the current directory to a list to be returned
         LinkedList<ListItem> listItems = new LinkedList<>();
-        //noinspection ConstantConditions
+        LinkedList<ListItem> folderLis = new LinkedList<>();
+        LinkedList<ListItem> fileLis = new LinkedList<>();
         for(JsonableFile file : files)
         {
             if(file.isDirectory())
             {
                 ListItem<?> item = new FolderListItem(file);
-                listItems.add(item);
+                folderLis.add(item);
                 item.addActionListener(e ->
                     new Thread()
                     {
@@ -53,7 +54,7 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
             else
             {
                 ListItem<?> item = new FileListItem(file);
-                listItems.add(item);
+                fileLis.add(item);
                 item.addActionListener(e ->
                     new Thread()
                     {
@@ -65,6 +66,9 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
                     }.start());
             }
         }
+
+        listItems.addAll(folderLis);
+        listItems.addAll(fileLis);
         setListItems(listItems);
     }
 }

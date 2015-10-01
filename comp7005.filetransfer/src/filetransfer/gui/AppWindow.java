@@ -1,6 +1,7 @@
 package filetransfer.gui;
 
 import java.awt.Dimension;
+import java.awt.GraphicsConfiguration;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -36,12 +37,12 @@ public class AppWindow extends JFrame
     /**
      * initial width of the application window.
      */
-    private static final int WINDOW_WIDTH = 500;
+    private static final int WINDOW_WIDTH = 640;
 
     /**
      * initial height of the application window.
      */
-    private static final int WINDOW_HEIGHT = 300;
+    private static final int WINDOW_HEIGHT = 480;
 
     /**
      * title of the application window shown in the title bar.
@@ -120,24 +121,29 @@ public class AppWindow extends JFrame
         {
             // create the server menu & add it to the application window
             JMenu serverOptionsMenu = new JMenu("Server");
+            serverOptionsMenu.setMnemonic('s');
             add(serverOptionsMenu);
 
             // create the start server menu item & add it to the server menu
             JMenuItem startMenuItem = new JMenuItem("Start");
+            startMenuItem.setMnemonic('s');
             startMenuItem.addActionListener(event -> serverApp.promptStartServer(AppWindow.this));
             serverOptionsMenu.add(startMenuItem);
 
             // create the stop server menu item & add it to the server menu
             JMenuItem stopMenuItem = new JMenuItem("Stop");
+            stopMenuItem.setMnemonic('t');
             stopMenuItem.addActionListener(event -> serverApp.stopServer(AppWindow.this));
             serverOptionsMenu.add(stopMenuItem);
 
             // create the client menu & add it to the application window
             JMenu clientOptionsMenu = new JMenu("Client");
+            clientOptionsMenu.setMnemonic('c');
             add(clientOptionsMenu);
 
             // create the connect to server menu item & add it to the server menu
             JMenuItem connectMenuItem = new JMenuItem("Connect...");
+            connectMenuItem.setMnemonic('c');
             connectMenuItem.addActionListener(event -> clientApp.promptConnect(AppWindow.this));
             clientOptionsMenu.add(connectMenuItem);
         }

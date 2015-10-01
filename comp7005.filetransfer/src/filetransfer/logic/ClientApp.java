@@ -119,6 +119,7 @@ public class ClientApp
         {
             progressMonitor.setMillisToDecideToPopup(0);
             AppServer.pullFile(remoteAddress,progressMonitor,path,currentDirectory);
+            getLocalListAdapter().presentCurrentDirectory();
         }
 
         catch(IOException e)
@@ -142,6 +143,7 @@ public class ClientApp
         {
             progressMonitor.setMillisToDecideToPopup(0);
             AppServer.pushFile(remoteAddress,progressMonitor,currentRemoteDirectory,fileToSend);
+            getRemoteListAdapter().present(pullDirectoryFiles(parentComponent,currentRemoteDirectory));
         }
 
         catch(IOException e)
