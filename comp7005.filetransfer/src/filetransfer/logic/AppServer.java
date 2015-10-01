@@ -20,12 +20,15 @@ import filetransfer.net.Server;
 
 public class AppServer extends Server
 {
-    // constants: exchange types
+    // constants: network operation IDs indicate network operation to performed
     public static final int TYPE_PULL_DIR_FILES = 0;
     public static final int TYPE_PULL_FILE = 1;
     public static final int TYPE_PUSH_FILE = 2;
 
-    public static final int MAX_SEGMENT_SIZE = 1024;
+    // constants: protocol parameters
+    public static final int MAX_FILE_SEGMENT_SIZE = 1024;
+
+    // public interface: network operations & associated handlers
 
     public static void pullFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String path,File directory) throws IOException
     {
@@ -53,7 +56,7 @@ public class AppServer extends Server
             {
                 long totalBytesRead = 0;
                 boolean isEot = false;
-                byte[] fileData = new byte[MAX_SEGMENT_SIZE];
+                byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
                 while(!isEot)
                 {
                     // read the packet
@@ -92,7 +95,7 @@ public class AppServer extends Server
             try(FileInputStream fis = new FileInputStream(fileToSend))
             {
                 boolean isEot;
-                byte[] buffer = new byte[MAX_SEGMENT_SIZE];
+                byte[] buffer = new byte[MAX_FILE_SEGMENT_SIZE];
                 do
                 {
                     // gather data to create packet. it is important to check
@@ -155,7 +158,7 @@ public class AppServer extends Server
             {
                 long bytesSent = 0;
                 boolean isEot;
-                byte[] buffer = new byte[MAX_SEGMENT_SIZE];
+                byte[] buffer = new byte[MAX_FILE_SEGMENT_SIZE];
                 do
                 {
                     // gather data to create packet. it is important to check
@@ -200,7 +203,7 @@ public class AppServer extends Server
             try(FileOutputStream fos = new FileOutputStream(file))
             {
                 boolean isEot = false;
-                byte[] fileData = new byte[MAX_SEGMENT_SIZE];
+                byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
                 while(!isEot)
                 {
                     // read the packet
@@ -288,6 +291,8 @@ public class AppServer extends Server
         socket.close();
     }
 
+    // public interface: constructors
+
     /**
      * instantiates a server.
      *
@@ -300,6 +305,8 @@ public class AppServer extends Server
     {
         super(listenPort);
     }
+
+    // protected interface: template method implementations
 
     @Override
     protected void onAccept(Socket newSocket)
