@@ -3,6 +3,7 @@ package filetransfer.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * a server that is bound to a port, and will accept connection requests sent to
@@ -21,9 +22,20 @@ import java.net.Socket;
 public abstract class Server
 {
     /**
+     * number of threads that are waiting for connection requests allowed
+     */
+    private static final int MAX_WAITING_ACCEPT_THREADS = 5;
+
+    /**
+     * keeps count of the number of threads that are waiting to accept a new
+     *   connection.
+     */
+    private final AtomicInteger waitingThreadCount = new AtomicInteger(0);
+
+    /**
      * the server's single server socket used to accept new connections from.
      */
-    private ServerSocket serverSocket;
+    private final ServerSocket serverSocket;
 
     // public interface: constructors
 
@@ -104,28 +116,49 @@ public abstract class Server
         {
             // accept any new connections until the socket is closed by another
             // thread
-            while(true)
+            while(!serverSocket.isClosed())
             {
-                // accept a connection...
+                // wait until there is less than maximum number of threads
+                // waiting before continuing to create another thread
                 try
                 {
-                    final Socket newSocket = serverSocket.accept();
-                    new Thread()
+                    while(waitingThreadCount.get() >= MAX_WAITING_ACCEPT_THREADS)
                     {
-                        @Override
-                        public void run()
+                        synchronized(waitingThreadCount)
                         {
-                            onAccept(newSocket);
+                            waitingThreadCount.wait();
                         }
-                    }.start();
+                    }
                 }
 
-                // server socket closed by another thread; stop accepting
-                // connections.
-                catch(IOException e)
+                // interrupted because IOException occurred. perhaps server
+                // socket is closed now.
+                catch(InterruptedException e)
                 {
-                    break;
+                    // do nothing
                 }
+
+                // create the thread to accept the connection and such
+                waitingThreadCount.incrementAndGet();
+                new Thread(() ->
+                {
+                    synchronized(waitingThreadCount)
+                    {
+                        try
+                        {
+                            Socket newSocket = serverSocket.accept();
+                            waitingThreadCount.decrementAndGet();
+                            waitingThreadCount.notify();
+                            onAccept(newSocket);
+                        }
+
+                        // IOException occurred. perhaps server socket is closed.
+                        catch(IOException e)
+                        {
+                            AcceptThread.this.interrupt();
+                        }
+                    }
+                }).start();
             }
         }
     }
