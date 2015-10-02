@@ -472,6 +472,6 @@ public class ClientLogic
      */
     private String makePortOutOfRangeMessage(int portNumber)
     {
-        return "The specified port number ("+portNumber+") is our of range; valid ports range from 1 to 65535";
+        return "The specified port number ("+portNumber+") is out of range; valid port numbers range from 1 to 65535";
     }
 }
