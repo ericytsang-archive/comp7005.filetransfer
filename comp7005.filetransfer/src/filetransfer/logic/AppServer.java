@@ -22,6 +22,8 @@ import filetransfer.net.Server;
  * listens to a specified port on the host, and accepts any connection requests
  *   received from it.
  *
+ * handles requests from remote hosts to fulfill application level requests.
+ *
  * when a new connection is created, the {@code onAccept} template method is
  *   invoked; subclasses of this class should override this method.
  *

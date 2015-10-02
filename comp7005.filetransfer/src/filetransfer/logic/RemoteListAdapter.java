@@ -8,10 +8,42 @@ import filetransfer.gui.FileListItem;
 import filetransfer.gui.FolderListItem;
 import filetransfer.gui.ListItem;
 
+/**
+ * manages the list items that are displayed on the scroll pane used to show
+ *   files on the remote server.
+ *
+ * @file    RemoteListAdapter.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
+ * @class   RemoteListAdapter
+ *
+ * @date    2015-10-02T10:45:08-0800
+ *
+ * @author  Eric Tsang
+ */
 public class RemoteListAdapter extends LabeledScrollPane.Adapter
 {
+    /**
+     * reference to the client logic application to use.
+     */
     private final ClientLogic clientLogic;
 
+    /**
+     * instantiates a new remote list adapter, that uses the passed client logic
+     *   object.
+     *
+     * @method  RemoteListAdapter
+     *
+     * @date    2015-10-02T10:43:01-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   clientLogic reference to the client logic object to use to pull
+     *   information from the remote host.
+     *
+     * @return  a new instance of remote list adapter.
+     */
     public RemoteListAdapter(ClientLogic clientLogic)
     {
         this.clientLogic = clientLogic;

@@ -10,6 +10,20 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
+/**
+ * a scroll pane that is accompanied with a label above it giving some context
+ *   to the user as to what is being displayed by the scroll pane.
+ *
+ * @file    LabeledScrollPane.java
+ *
+ * @program comp7005.filetransfer.jar
+ *
+ * @class   LabeledScrollPane
+ *
+ * @date    2015-10-02T09:56:03-0800
+ *
+ * @author  Eric Tsang
+ */
 public class LabeledScrollPane extends JPanel
 {
     // constants: settings
