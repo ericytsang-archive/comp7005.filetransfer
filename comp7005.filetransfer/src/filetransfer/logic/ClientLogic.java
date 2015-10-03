@@ -384,7 +384,7 @@ public class ClientLogic
      *
      * @author  Eric Tsang
      *
-     * @param   File fileToSend file to use in the message
+     * @param   fileToSend file to use in the message
      *
      * @return  a message that indicates to the user that the application is
      *   currently uploading a file to the remote host.

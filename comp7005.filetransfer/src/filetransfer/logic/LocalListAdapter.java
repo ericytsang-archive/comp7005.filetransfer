@@ -101,14 +101,9 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
                 ListItem<?> item = new FileListItem(file);
                 fileLis.add(item);
                 item.addActionListener(e ->
-                    new Thread()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            clientLogic.pushFile(getParentComponent(),file);
-                        }
-                    }.start());
+                    new Thread(() ->
+                        clientLogic.pushFile(getParentComponent(),file))
+                        .start());
             }
         }
 
