@@ -342,11 +342,11 @@ public class ClientLogic
     @SuppressWarnings("ConstantConditions")
     public void setLocalDirectory(String path)
     {
-        currentDirectory = new File(path);
-
         File directory = path.equals(".")
                 ? new File(path).getAbsoluteFile().getParentFile()
                 : new File(path);
+
+        currentDirectory = directory;
 
         // add all the files in the specified directory to a list to be returned
         LinkedList<JsonableFile> files = new LinkedList<>();
