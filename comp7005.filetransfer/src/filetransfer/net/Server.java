@@ -1,6 +1,8 @@
 package filetransfer.net;
 
 import java.io.IOException;
+import java.net.BindException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,7 +37,7 @@ public abstract class Server
     /**
      * the server's single server socket used to accept new connections from.
      */
-    private final ServerSocket serverSocket;
+    private ServerSocket serverSocket;
 
     // public interface: constructors
 
@@ -48,29 +50,74 @@ public abstract class Server
      *
      * @author  Eric Tsang
      *
-     * @param   listenPort port to bind the server to; connection requests
-     *   received on this port will be accepted.
-     *
      * @return  new instance of Server
-     *
-     * @throws  IOException if the server fails to bind to port {@code
-     *   listenPort}
      */
-    public Server(int listenPort) throws IOException
+    public Server()
     {
         // initialize instance data
-        this.serverSocket = new ServerSocket(listenPort);
-
-        // start the accept thread
-        new AcceptThread().start();
+        try
+        {
+            this.serverSocket = new ServerSocket();
+            this.serverSocket.close();
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     // public interface: server methods
 
     /**
+     * binds the server to port {@code listenPort}.
+     *
+     * @method  start
+     *
+     * @date    2015-09-29T18:06:09-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   listenPort port to bind the server to; connection requests
+     *   received on this port will be accepted.
+     *
+     * @throws  AlreadyBoundException if the server fails to bind to port {@code
+     *   listenPort} because the server is already bound to a port.
+     * @throws  PortOccupiedException if the server fails to bind to port {@code
+     *   listenPort} because the port is in use.
+     */
+    public void start(int listenPort) throws AlreadyBoundException, PortOccupiedException
+    {
+        try
+        {
+            // create a new socket if it is already closed
+            if(serverSocket.isClosed())
+            {
+                serverSocket = new ServerSocket();
+            }
+
+            // bind the socket
+            serverSocket.bind(new InetSocketAddress(listenPort));
+
+            // start the accept thread
+            new AcceptThread().start();
+        }
+        catch(IOException e)
+        {
+            if(serverSocket.isBound())
+            {
+                throw new AlreadyBoundException();
+            }
+            else
+            {
+                throw new PortOccupiedException();
+            }
+        }
+    }
+
+    /**
      * closes the server socket, so it won't accept anymore new connections.
      *
-     * @method  stopServer
+     * @method  stop
      *
      * @date    2015-09-29T18:30:52-0800
      *
@@ -78,9 +125,32 @@ public abstract class Server
      *
      * @throws  IOException thrown when the server was already stopped.
      */
-    public void stopServer() throws IOException
+    public void stop() throws IOException
     {
-        serverSocket.close();
+        if(!serverSocket.isClosed())
+        {
+            serverSocket.close();
+        }
+        else
+        {
+            throw new IOException("already closed");
+        }
+    }
+
+    /**
+     * returns the underlying server socket.
+     *
+     * @method  getServerSocket
+     *
+     * @date    2015-09-29T18:30:52-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @return  the underlying server socket.
+     */
+    public ServerSocket getServerSocket()
+    {
+        return serverSocket;
     }
 
     // protected interface: callbacks

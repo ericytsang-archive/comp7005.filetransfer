@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -15,7 +16,9 @@ import java.util.List;
 
 import javax.swing.ProgressMonitor;
 
+import filetransfer.net.AlreadyBoundException;
 import filetransfer.net.NetUtils;
+import filetransfer.net.PortOccupiedException;
 import filetransfer.net.Server;
 
 /**
@@ -401,30 +404,6 @@ public class AppServer extends Server
         {
             socket.close();
         }
-    }
-
-    // public interface: constructors
-
-    /**
-     * instantiates a server.
-     *
-     * @method  AppServer
-     *
-     * @date    2015-10-01T09:17:15-0800
-     *
-     * @author  Eric Tsang
-     *
-     * @param   listenPort port to bind the server to; connection requests
-     *   received on this port will be accepted.
-     *
-     * @return  a new instance of the Server class.
-     *
-     * @throws  IOException when the server socket fails to bind to the given
-     *   port.
-     */
-    public AppServer(int listenPort) throws IOException
-    {
-        super(listenPort);
     }
 
     // protected interface: template method implementations

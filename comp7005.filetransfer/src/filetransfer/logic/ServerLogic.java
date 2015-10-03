@@ -5,6 +5,8 @@ import java.io.IOException;
 
 import javax.swing.JOptionPane;
 
+import filetransfer.net.AlreadyBoundException;
+import filetransfer.net.PortOccupiedException;
 import filetransfer.net.Server;
 
 /**
@@ -74,7 +76,7 @@ public class ServerLogic
     /**
      * reference to the application's server.
      */
-    private Server server;
+    private final Server server = new AppServer();
 
     // public interface: server methods
 
@@ -93,18 +95,6 @@ public class ServerLogic
      */
     public synchronized void promptStartServer(Component parentComponent)
     {
-        // stop previous server if possible
-        try
-        {
-            server.stopServer();
-            server = null;
-        }
-        catch(IOException|NullPointerException e)
-        {
-            // server has already been closed, or was never open during this
-            // session...
-        }
-
         // prompt the user for a port number to start the new server on
         String stringPort = JOptionPane.showInputDialog(parentComponent,PROMPT_START_SERVER);
 
@@ -112,16 +102,23 @@ public class ServerLogic
         try
         {
             int portNumber = Integer.parseUnsignedInt(stringPort);
-            server = new AppServer(portNumber);
+            server.start(portNumber);
             JOptionPane.showMessageDialog(parentComponent,makeServerStartedMessage(portNumber),TITLE_START_SERVER_SUCCEEDED,JOptionPane.INFORMATION_MESSAGE);
         }
 
         // failed to start the sever; it is probably an invalid port, or the
         // port is in use
-        catch(IOException e)
+        catch(PortOccupiedException e)
         {
             int portNumber = Integer.parseUnsignedInt(stringPort);
             JOptionPane.showMessageDialog(parentComponent,makePortInUseMessage(portNumber),TITLE_START_SERVER_FAILED,JOptionPane.ERROR_MESSAGE);
+        }
+
+        // failed to start the sever; it is probably an invalid port, or the
+        // port is in use
+        catch(AlreadyBoundException e)
+        {
+            JOptionPane.showMessageDialog(parentComponent,makeAlreadyBoundMessage(server.getServerSocket().getLocalPort()),TITLE_START_SERVER_FAILED,JOptionPane.ERROR_MESSAGE);
         }
 
         // the entered port number is invalid
@@ -149,7 +146,7 @@ public class ServerLogic
         // try to stop the server...
         try
         {
-            server.stopServer();
+            server.stop();
             JOptionPane.showMessageDialog(parentComponent,MESSAGE_SERVER_STOPPED,TITLE_STOP_SERVER_SUCCEEDED,JOptionPane.INFORMATION_MESSAGE);
         }
 
@@ -221,5 +218,25 @@ public class ServerLogic
     private String makePortInUseMessage(int portNumber)
     {
         return "Port "+portNumber+" is already in use";
+    }
+
+    /**
+     * used to create the message displayed in the dialog box used to inform the
+     *   user that the server is already bound to a port.
+     *
+     * @method  makePortInUseMessage
+     *
+     * @date    2015-10-02T11:01:54-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   currentPort port number to display in the message.
+     *
+     * @return  a string addressed to the user indicating the server is already
+     *   bound to a port.
+     */
+    private String makeAlreadyBoundMessage(int currentPort)
+    {
+        return "The server is already listening on port "+currentPort;
     }
 }
