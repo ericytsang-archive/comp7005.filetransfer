@@ -91,14 +91,9 @@ public class RemoteListAdapter extends LabeledScrollPane.Adapter
                 ListItem<?> item = new FolderListItem(file);
                 folderLis.add(item);
                 item.addActionListener(e ->
-                    new Thread()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            present(clientLogic.pullDirectoryFiles(getParentComponent(),file.getAbsolutePath()));
-                        }
-                    }.start());
+                        new Thread(() ->
+                            clientLogic.setRemoteDirectory(getParentComponent(),file.getAbsolutePath()))
+                            .start());
             }
             else
             {

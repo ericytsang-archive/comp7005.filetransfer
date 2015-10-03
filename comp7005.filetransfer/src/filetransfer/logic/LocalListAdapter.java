@@ -2,6 +2,7 @@ package filetransfer.logic;
 
 import java.io.File;
 import java.util.LinkedList;
+import java.util.List;
 
 import filetransfer.gui.LabeledScrollPane;
 import filetransfer.gui.FileListItem;
@@ -63,7 +64,7 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
     @Override
     protected void onSetLabeledScrollPane()
     {
-        presentCurrentDirectory();
+        clientLogic.setLocalDirectory(".");
         setTitle("Local Files:");
     }
 
@@ -72,51 +73,46 @@ public class LocalListAdapter extends LabeledScrollPane.Adapter
     /**
      * displays the files of the current directory on the scroll pane.
      *
-     * @method  presentCurrentDirectory
+     * @method  present
      *
      * @date    2015-10-02T09:45:51-0800
      *
      * @author  Eric Tsang
+     *
+     * @param   files a collection f files to display.
      */
     @SuppressWarnings("ConstantConditions")
-    public void presentCurrentDirectory()
+    public void present(List<JsonableFile> files)
     {
         // add all the files in the current directory to a list to be returned
         LinkedList<ListItem> listItems = new LinkedList<>();
         LinkedList<ListItem> folderLis = new LinkedList<>();
         LinkedList<ListItem> fileLis = new LinkedList<>();
-        for(File file : clientLogic.getCurrentDirectory().listFiles())
+        for(JsonableFile file : files)
         {
             if(file.isDirectory())
             {
                 ListItem<?> item = new FolderListItem(file);
                 folderLis.add(item);
-                item.addActionListener(e -> {
-                    clientLogic.setCurrentDirectory(file);
-                    presentCurrentDirectory();
-                });
+                item.addActionListener(e ->
+                        new Thread(() ->
+                                clientLogic.setLocalDirectory(file.getAbsolutePath()))
+                                .start());
             }
             else
             {
                 ListItem<?> item = new FileListItem(file);
                 fileLis.add(item);
                 item.addActionListener(e ->
-                    new Thread(() ->
-                        clientLogic.pushFile(getParentComponent(),file))
-                        .start());
+                        new Thread()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                clientLogic.pushFile(getParentComponent(),new File(file.getAbsolutePath()));
+                            }
+                        }.start());
             }
-        }
-
-        // put parent directory as element in list to be returned if it exists
-        File parentFile = clientLogic.getCurrentDirectory().getAbsoluteFile().getParentFile();
-        if(parentFile != null)
-        {
-            ListItem<?> item = new FolderListItem(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
-            folderLis.addFirst(item);
-            item.addActionListener(e -> {
-                clientLogic.setCurrentDirectory(parentFile);
-                presentCurrentDirectory();
-            });
         }
 
         listItems.addAll(folderLis);

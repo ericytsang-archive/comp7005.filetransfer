@@ -5,13 +5,19 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
+
+import filetransfer.gui.FileListItem;
+import filetransfer.gui.FolderListItem;
+import filetransfer.gui.ListItem;
 
 /**
  * contains all the logic associated with connecting to a remote host, and
@@ -117,37 +123,35 @@ public class ClientLogic
     // public interface: server methods
 
     /**
-     * returns the current directory that this application is working in.
+     * returns the client's local list adapter.
      *
-     * @method  getCurrentDirectory
+     * @method  getLocalListAdapter
      *
-     * @date    2015-10-02T11:56:47-0800
+     * @date    2015-10-02T11:59:08-0800
      *
      * @author  Eric Tsang
      *
-     * @return  the current directory that this application is working in.
+     * @return  the client's local list adapter.
      */
-    public File getCurrentDirectory()
+    public LocalListAdapter getLocalListAdapter()
     {
-        return currentDirectory.getName().equals(".")
-                ? currentDirectory.getAbsoluteFile().getParentFile()
-                : currentDirectory;
+        return localListAdapter;
     }
 
     /**
-     * sets the client's current local working directory.
+     * returns the client's remote list adapter.
      *
-     * @method  setCurrentDirectory
+     * @method  getRemoteListAdapter
      *
-     * @date    2015-10-02T11:57:14-0800
+     * @date    2015-10-02T12:01:50-0800
      *
      * @author  Eric Tsang
      *
-     * @param   newDirectory the client's new current local working directory.
+     * @return  the client's remote list adapter.
      */
-    public void setCurrentDirectory(File newDirectory)
+    public RemoteListAdapter getRemoteListAdapter()
     {
-        currentDirectory = newDirectory;
+        return remoteListAdapter;
     }
 
     /**
@@ -182,7 +186,7 @@ public class ClientLogic
 
             // attempt to query files from the address right away
             threadPoolExecutor.execute(() ->
-                remoteListAdapter.present(pullDirectoryFiles(parentComponent,"."))
+                            setRemoteDirectory(parentComponent,".")
             );
         }
 
@@ -208,38 +212,6 @@ public class ClientLogic
     }
 
     /**
-     * returns the client's local list adapter.
-     *
-     * @method  getLocalListAdapter
-     *
-     * @date    2015-10-02T11:59:08-0800
-     *
-     * @author  Eric Tsang
-     *
-     * @return  the client's local list adapter.
-     */
-    public LocalListAdapter getLocalListAdapter()
-    {
-        return localListAdapter;
-    }
-
-    /**
-     * returns the client's remote list adapter.
-     *
-     * @method  getRemoteListAdapter
-     *
-     * @date    2015-10-02T12:01:50-0800
-     *
-     * @author  Eric Tsang
-     *
-     * @return  the client's remote list adapter.
-     */
-    public RemoteListAdapter getRemoteListAdapter()
-    {
-        return remoteListAdapter;
-    }
-
-    /**
      * issues a download request to the remote host, and downloads the file.
      *
      * @method  pullFile
@@ -259,7 +231,7 @@ public class ClientLogic
         {
             progressMonitor.setMillisToDecideToPopup(0);
             AppServer.pullFile(remoteAddress,progressMonitor,path,currentDirectory);
-            getLocalListAdapter().presentCurrentDirectory();
+            setLocalDirectory(currentDirectory.getAbsolutePath());
         }
 
         catch(IOException e)
@@ -295,7 +267,7 @@ public class ClientLogic
         {
             progressMonitor.setMillisToDecideToPopup(0);
             AppServer.pushFile(remoteAddress,progressMonitor,currentRemoteDirectory,fileToSend);
-            getRemoteListAdapter().present(pullDirectoryFiles(parentComponent,currentRemoteDirectory));
+            setRemoteDirectory(parentComponent,currentRemoteDirectory);
         }
 
         catch(IOException e)
@@ -315,7 +287,7 @@ public class ClientLogic
      * pulls the files that are located in the specified directory on the remote
      *   host.
      *
-     * @method  pullDirectoryFiles
+     * @method  setRemoteDirectory
      *
      * @date    2015-10-02T12:06:17-0800
      *
@@ -327,21 +299,22 @@ public class ClientLogic
      * @return  information about the files that reside in the specified
      *   directory.
      */
-    public List<JsonableFile> pullDirectoryFiles(Component parentComponent,String path)
+    public void setRemoteDirectory(Component parentComponent,String path)
     {
         ProgressMonitor progressMonitor = new ProgressMonitor(parentComponent,makePullingDirectoryFilesMessage(path),null,0,4);
         currentRemoteDirectory = path;
+        List<JsonableFile> files;
 
         try
         {
             progressMonitor.setMillisToDecideToPopup(0);
-            return AppServer.pullDirectoryFiles(remoteAddress,progressMonitor,path);
+            files = AppServer.pullDirectoryFiles(remoteAddress,progressMonitor,path);
         }
 
         catch(IOException e)
         {
             JOptionPane.showMessageDialog(parentComponent,makeConnectFailedMessage(remoteAddress.getHostString(),remoteAddress.getPort()),TITLE_CONNECT_FAILED,JOptionPane.ERROR_MESSAGE);
-            return Collections.emptyList();
+            files = Collections.emptyList();
         }
 
         // cleanup and end progress dialog
@@ -350,6 +323,47 @@ public class ClientLogic
             progressMonitor.setProgress(4);
             progressMonitor.close();
         }
+
+        getRemoteListAdapter().present(files);
+    }
+
+    /**
+     * sets the client's current local working directory, and displays it on the
+     *   scroll pane.
+     *
+     * @method  setLocalDirectory
+     *
+     * @date    2015-10-02T11:57:14-0800
+     *
+     * @author  Eric Tsang
+     *
+     * @param   path the client's new current local working directory.
+     */
+    @SuppressWarnings("ConstantConditions")
+    public void setLocalDirectory(String path)
+    {
+        currentDirectory = new File(path);
+
+        File directory = path.equals(".")
+                ? new File(path).getAbsoluteFile().getParentFile()
+                : new File(path);
+
+        // add all the files in the specified directory to a list to be returned
+        LinkedList<JsonableFile> files = new LinkedList<>();
+        //noinspection ConstantConditions
+        for(File file : directory.listFiles())
+        {
+            files.add(new JsonableFile(file));
+        }
+
+        // put parent directory as element in list to be returned if it exists
+        File parentFile = directory.getParentFile();
+        if(parentFile != null)
+        {
+            files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
+        }
+
+        getLocalListAdapter().present(files);
     }
 
     // private interface: dialog message builders

@@ -71,7 +71,7 @@ public class AppServer extends Server
     /**
      * pulls the list of files that exists in the directory on the remote host.
      *
-     * @method  pullDirectoryFiles
+     * @method  setRemoteDirectory
      *
      * @date    2015-10-01T09:10:11-0800
      *
