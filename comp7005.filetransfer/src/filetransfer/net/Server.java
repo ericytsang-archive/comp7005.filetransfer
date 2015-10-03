@@ -116,49 +116,50 @@ public abstract class Server
         {
             // accept any new connections until the socket is closed by another
             // thread
-            while(!serverSocket.isClosed())
+            synchronized(waitingThreadCount)
             {
-                // wait until there is less than maximum number of threads
-                // waiting before continuing to create another thread
-                try
+                while(!serverSocket.isClosed())
                 {
-                    while(waitingThreadCount.get() >= MAX_WAITING_ACCEPT_THREADS)
+                    // wait until there is less than maximum number of threads
+                    // waiting before continuing to create another thread
+                    try
                     {
-                        synchronized(waitingThreadCount)
+                        while(waitingThreadCount.get() >= MAX_WAITING_ACCEPT_THREADS)
                         {
                             waitingThreadCount.wait();
                         }
                     }
-                }
 
-                // interrupted because IOException occurred. perhaps server
-                // socket is closed now.
-                catch(InterruptedException e)
-                {
-                    // do nothing
-                }
-
-                // create the thread to accept the connection and such
-                waitingThreadCount.incrementAndGet();
-                new Thread(() ->
-                {
-                    synchronized(waitingThreadCount)
+                    // interrupted because IOException occurred. perhaps server
+                    // socket is closed now.
+                    catch(InterruptedException e)
                     {
-                        try
-                        {
-                            Socket newSocket = serverSocket.accept();
-                            waitingThreadCount.decrementAndGet();
-                            waitingThreadCount.notify();
-                            onAccept(newSocket);
-                        }
-
-                        // IOException occurred. perhaps server socket is closed.
-                        catch(IOException e)
-                        {
-                            AcceptThread.this.interrupt();
-                        }
+                        // do nothing
                     }
-                }).start();
+
+                    // create the thread to accept the connection and such
+                    waitingThreadCount.incrementAndGet();
+                    new Thread(() ->
+                    {
+                        synchronized(waitingThreadCount)
+                        {
+                            try
+                            {
+                                Socket newSocket = serverSocket.accept();
+                                waitingThreadCount.decrementAndGet();
+                                waitingThreadCount.notify();
+                                onAccept(newSocket);
+                            }
+
+                            // IOException occurred. perhaps server socket is
+                            // closed.
+                            catch(IOException e)
+                            {
+                                AcceptThread.this.interrupt();
+                            }
+                        }
+                    }).start();
+                }
             }
         }
     }
