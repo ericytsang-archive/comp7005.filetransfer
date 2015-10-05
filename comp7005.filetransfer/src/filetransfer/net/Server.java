@@ -211,22 +211,22 @@ public abstract class Server
                     waitingThreadCount.incrementAndGet();
                     new Thread(() ->
                     {
-                        synchronized(waitingThreadCount)
+                        try
                         {
-                            try
+                            Socket newSocket = serverSocket.accept();
+                            synchronized(waitingThreadCount)
                             {
-                                Socket newSocket = serverSocket.accept();
                                 waitingThreadCount.decrementAndGet();
                                 waitingThreadCount.notify();
-                                onAccept(newSocket);
                             }
+                            onAccept(newSocket);
+                        }
 
-                            // IOException occurred. perhaps server socket is
-                            // closed.
-                            catch(IOException e)
-                            {
-                                AcceptThread.this.interrupt();
-                            }
+                        // IOException occurred. perhaps server socket is
+                        // closed.
+                        catch(IOException e)
+                        {
+                            AcceptThread.this.interrupt();
                         }
                     }).start();
                 }
