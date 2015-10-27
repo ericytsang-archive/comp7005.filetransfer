@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/comp7005.filetransfer/comp7005.filetransfer.iml" filepath="$PROJECT_DIR$/comp7005.filetransfer/comp7005.filetransfer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/comp7005.filetransfer.iml" filepath="$PROJECT_DIR$/comp7005.filetransfer.iml" />
     </modules>
   </component>
 </project>

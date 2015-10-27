@@ -10,14 +10,9 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
-
-import filetransfer.gui.FileListItem;
-import filetransfer.gui.FolderListItem;
-import filetransfer.gui.ListItem;
 
 /**
  * contains all the logic associated with connecting to a remote host, and

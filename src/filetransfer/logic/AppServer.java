@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -16,9 +15,7 @@ import java.util.List;
 
 import javax.swing.ProgressMonitor;
 
-import filetransfer.net.AlreadyBoundException;
 import filetransfer.net.NetUtils;
-import filetransfer.net.PortOccupiedException;
 import filetransfer.net.Server;
 
 /**

@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import filetransfer.logic.Jsonable;
-
 /**
  * provides various functions that are useful regarding the {@code Jsonable}
  *   interface.
