@@ -1,15 +1,12 @@
 package filetransfer.logic;
 
+import com.teamhoe.reliableudp.ServerSocket;
+import com.teamhoe.reliableudp.SocketInputStream;
+import com.teamhoe.reliableudp.SocketOutputStream;
 import org.json.JSONArray;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -87,24 +84,27 @@ public class AppServer extends Server
     {
 
         // perform the pull
-        try(Socket socket = new Socket())
+        try(ServerSocket serverSocket = ServerSocket.Companion.make(null))
         {
             // connect to the remote address
             progressMonitor.setProgress(0);
-            socket.connect(remoteAddress);
+            SocketOutputStream sos = serverSocket.connect(remoteAddress,null);
+            SocketInputStream sis = serverSocket.accept(remoteAddress,null);
 
             // get handles to the streams
             progressMonitor.setProgress(1);
-            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+            DataOutputStream os = new DataOutputStream(sos);
 
             // send the request & directory path
             progressMonitor.setProgress(2);
             os.writeInt(TYPE_PULL_DIR_FILES);
-            NetUtils.sendString(socket,directoryPath);
+            NetUtils.sendString(sos,directoryPath);
 
             // read the server's json response
             progressMonitor.setProgress(3);
-            String response = NetUtils.readString(socket);
+            String response = NetUtils.readString(sis);
+            sis.close();
+            sos.close();
 
             // parse the received response string and return
             progressMonitor.setProgress(4);
@@ -122,17 +122,18 @@ public class AppServer extends Server
      *
      * @author  Eric Tsang
      *
-     * @param   socket the connection that has issued the request.
+     * @param   sis input stream to read from
+     * @param   sos the connection that has issued the request.
      *
      * @throws  IOException thrown when an IOException occurs.
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
-    private void handlePullDirectoryFiles(Socket socket) throws IOException
+    private void handlePullDirectoryFiles(SocketInputStream sis,SocketOutputStream sos) throws IOException
     {
         try
         {
             // read the path from the socket
-            String path = NetUtils.readString(socket);
+            String path = NetUtils.readString(sis);
             File directory = path.equals(".")
                     ? new File(path).getAbsoluteFile().getParentFile()
                     : new File(path);
@@ -154,13 +155,14 @@ public class AppServer extends Server
 
             // serialize the list of files, and send it back, and wait for the
             // connection to close before closing ourselves and returning
-            NetUtils.sendString(socket,JsonableUtils.toJsonArray(files).toString());
-            NetUtils.waitForClosure(socket);
+            NetUtils.sendString(sos,JsonableUtils.toJsonArray(files).toString());
+            sos.flush();
         }
 
         finally
         {
-            socket.close();
+            sis.close();
+            sos.close();
         }
     }
 
@@ -183,22 +185,23 @@ public class AppServer extends Server
     public static void pullFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String remoteFilePath,File directory) throws IOException
     {
         // perform the pull; download a file from the server
-        try(Socket socket = new Socket())
+        try(ServerSocket serverSocket = ServerSocket.Companion.make(null))
         {
             // connect to the remote address
-            socket.connect(remoteAddress);
+            SocketOutputStream sos = serverSocket.connect(remoteAddress,null);
+            SocketInputStream sis = serverSocket.accept(remoteAddress,null);
 
             // get handles to the streams
-            DataInputStream is = new DataInputStream(socket.getInputStream());
-            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+            DataInputStream is = new DataInputStream(sis);
+            DataOutputStream os = new DataOutputStream(sos);
 
             // send the request & remoteFilePath
             os.writeInt(TYPE_PULL_FILE);
-            NetUtils.sendString(socket,remoteFilePath);
+            NetUtils.sendString(sos,remoteFilePath);
 
             // read the size of the file
             long fileSize = is.readLong();
-            String fileName = NetUtils.readString(socket);
+            String fileName = NetUtils.readString(sis);
 
             // read the contents of the file until its empty
             File file = new File(directory,fileName);
@@ -224,7 +227,7 @@ public class AppServer extends Server
                     // stop the download if it is cancelled
                     if(progressMonitor.isCanceled())
                     {
-                        socket.close();
+                        sos.close();
                         break;
                     }
                 }
@@ -242,24 +245,24 @@ public class AppServer extends Server
      *
      * @author  Eric Tsang
      *
-     * @param   socket the connection that has issued the request.
+     * @param   sos the connection that has issued the request.
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
-    private void handlePullFile(Socket socket) throws IOException
+    private void handlePullFile(SocketInputStream sis,SocketOutputStream sos) throws IOException
     {
         // handle a request to pull a file
         try
         {
             // get references to the streams
-            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+            DataOutputStream os = new DataOutputStream(sos);
 
             // read the path from the socket
-            String path = NetUtils.readString(socket);
+            String path = NetUtils.readString(sis);
 
             // send the file size, then file name
             File fileToSend = new File(path);
             os.writeLong(fileToSend.length());
-            NetUtils.sendString(socket,fileToSend.getName());
+            NetUtils.sendString(sos,fileToSend.getName());
 
             // read the contents of the file until its empty
             try(FileInputStream fis = new FileInputStream(fileToSend))
@@ -280,13 +283,14 @@ public class AppServer extends Server
             }
 
             // wait for connection to close before closing ourselves and returning
-            NetUtils.waitForClosure(socket);
+            sos.flush();
         }
 
         // close the socket once we're done with it
         finally
         {
-            socket.close();
+            sos.close();
+            sis.close();
         }
     }
 
@@ -309,18 +313,18 @@ public class AppServer extends Server
     public static void pushFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String directory,File fileToSend) throws IOException
     {
         // perform the push
-        try(Socket socket = new Socket())
+        try(ServerSocket serverSocket = ServerSocket.Companion.make(null))
         {
             // connect to the remote address
-            socket.connect(remoteAddress);
+            SocketOutputStream sos = serverSocket.connect(remoteAddress,null);
 
             // get handles to the streams
-            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+            DataOutputStream os = new DataOutputStream(sos);
 
             // send the request & path
             os.writeInt(TYPE_PUSH_FILE);
-            NetUtils.sendString(socket,directory);
-            NetUtils.sendString(socket,fileToSend.getName());
+            NetUtils.sendString(sos,directory);
+            NetUtils.sendString(sos,fileToSend.getName());
 
             // read the contents of the file and send it all
             try(FileInputStream fis = new FileInputStream(fileToSend))
@@ -348,7 +352,8 @@ public class AppServer extends Server
             }
 
             // wait for connection to close before closing ourselves and returning
-            NetUtils.waitForClosure(socket);
+            sos.flush();
+            sos.close();
         }
     }
 
@@ -361,20 +366,20 @@ public class AppServer extends Server
      *
      * @author  Eric Tsang
      *
-     * @param   socket the connection that has issued the request.
+     * @param   sis the connection that has issued the request.
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
-    private void handlePushFile(Socket socket) throws IOException
+    private void handlePushFile(SocketInputStream sis) throws IOException
     {
         // perform the pull
         try
         {
             // get handles to the streams
-            DataInputStream is = new DataInputStream(socket.getInputStream());
+            DataInputStream is = new DataInputStream(sis);
 
             // read the size of the file
-            String directory = NetUtils.readString(socket);
-            String fileName = NetUtils.readString(socket);
+            String directory = NetUtils.readString(sis);
+            String fileName = NetUtils.readString(sis);
 
             // read the contents of the file until its empty
             File file = new File(directory,fileName);
@@ -399,7 +404,7 @@ public class AppServer extends Server
         // close the socket
         finally
         {
-            socket.close();
+            sis.close();
         }
     }
 
@@ -414,28 +419,29 @@ public class AppServer extends Server
      *
      * @author  Eric Tsang
      *
-     * @param   newSocket the socket that was just accepted by the server.
+     * @param   sis the socket that was just accepted by the server.
      */
     @Override
-    protected void onAccept(Socket newSocket)
+    protected void onAccept(SocketInputStream sis,SocketOutputStream sos)
     {
         try
         {
             // get the input and output streams
-            DataInputStream is = new DataInputStream(newSocket.getInputStream());
+            DataInputStream is = new DataInputStream(sis);
 
             int requestType = is.readInt();
 
             switch(requestType)
             {
             case TYPE_PULL_DIR_FILES:
-                handlePullDirectoryFiles(newSocket);
+                handlePullDirectoryFiles(sis,sos);
                 break;
             case TYPE_PULL_FILE:
-                handlePullFile(newSocket);
+                handlePullFile(sis,sos);
                 break;
             case TYPE_PUSH_FILE:
-                handlePushFile(newSocket);
+                sos.close();
+                handlePushFile(sis);
                 break;
             }
         }

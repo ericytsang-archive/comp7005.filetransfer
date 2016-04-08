@@ -1,9 +1,6 @@
 package filetransfer.net;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.Socket;
+import java.io.*;
 
 import filetransfer.MiscUtils;
 
@@ -48,30 +45,6 @@ public class NetUtils
     public static final int MAX_STRING_SEGMENT_LENGTH = Integer.MAX_VALUE-100;
 
     /**
-     * waits for the passed socket to be closed by the remote host before
-     *   returning.
-     *
-     * @method  waitForClosure
-     *
-     * @date    2015-09-29T20:24:41-0800
-     *
-     * @author  Eric Tsang
-     *
-     * @param   socket [description]
-     */
-    public static void waitForClosure(Socket socket)
-    {
-        try
-        {
-            MiscUtils.affirm(socket.getInputStream().read() == -1);
-        }
-        catch(IOException e)
-        {
-            // socket closed
-        }
-    }
-
-    /**
      * reads a string from the passed socket. this method is created because
      *   readUTF would fail to read strings that are longer than
      *   Integer.MAX_VALUE. strings read from the socket must be sent with the
@@ -83,16 +56,16 @@ public class NetUtils
      *
      * @author  Eric Tsang
      *
-     * @param   socket socket to read the string from.
+     * @param   inputStream inputStream to read the string from.
      *
      * @return  the string read from the socket.
      *
      * @throws  IOException thrown when one occurs...
      */
-    public static String readString(Socket socket) throws IOException
+    public static String readString(InputStream inputStream) throws IOException
     {
         // get the streams
-        DataInputStream is = new DataInputStream(socket.getInputStream());
+        DataInputStream is = new DataInputStream(inputStream);
 
         // read & return the string
         StringBuilder stb = new StringBuilder();
@@ -130,15 +103,15 @@ public class NetUtils
      *
      * @author  Eric Tsang
      *
-     * @param   socket socket to send the string through.
+     * @param   outputStream output stream to send the string through.
      * @param   string string to send through the socket.
      *
      * @throws  IOException thrown when one occurs...
      */
-    public static void sendString(Socket socket,String string) throws IOException
+    public static void sendString(OutputStream outputStream,String string) throws IOException
     {
         // get the streams
-        DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+        DataOutputStream os = new DataOutputStream(outputStream);
 
         // send the string
         for(int cursor = 0; cursor < string.length();)

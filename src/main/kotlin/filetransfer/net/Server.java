@@ -1,9 +1,10 @@
 package filetransfer.net;
 
+import com.teamhoe.reliableudp.ServerSocket;
+import com.teamhoe.reliableudp.SocketInputStream;
+import com.teamhoe.reliableudp.SocketOutputStream;
+
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -56,7 +57,7 @@ public abstract class Server
         // initialize instance data
         try
         {
-            this.serverSocket = new ServerSocket();
+            this.serverSocket = ServerSocket.Companion.make(null);
             this.serverSocket.close();
         }
         catch(IOException e)
@@ -91,11 +92,11 @@ public abstract class Server
             // create a new socket if it is already closed
             if(serverSocket.isClosed())
             {
-                serverSocket = new ServerSocket();
+                serverSocket = ServerSocket.Companion.make(listenPort);
             }
 
-            // bind the socket
-            serverSocket.bind(new InetSocketAddress(listenPort));
+            // todo: bind the socket
+            // serverSocket.bind(new InetSocketAddress(listenPort));
 
             // start the accept thread
             new AcceptThread().start();
@@ -163,9 +164,9 @@ public abstract class Server
      *
      * @author  Eric Tsang
      *
-     * @param   newSocket the socket that was just accepted by the server.
+     * @param   sis the socket that was just accepted by the server.
      */
-    protected abstract void onAccept(Socket newSocket);
+    protected abstract void onAccept(SocketInputStream sis,SocketOutputStream sos);
 
     // private instances: threads
 
@@ -212,13 +213,22 @@ public abstract class Server
                     {
                         try
                         {
-                            Socket newSocket = serverSocket.accept();
+                            SocketInputStream sis = serverSocket.accept(null,null);
+                            try
+                            {
+                                Thread.sleep(10);
+                            }
+                            catch(InterruptedException e)
+                            {
+//                                nothing
+                            }
+                            SocketOutputStream sos = serverSocket.connect(sis.getRemoteAddress(),null);
                             synchronized(waitingThreadCount)
                             {
                                 waitingThreadCount.decrementAndGet();
                                 waitingThreadCount.notify();
                             }
-                            onAccept(newSocket);
+                            onAccept(sis,sos);
                         }
 
                         // IOException occurred. perhaps server socket is
