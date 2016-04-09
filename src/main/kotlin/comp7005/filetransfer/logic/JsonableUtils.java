@@ -1,4 +1,4 @@
-package filetransfer.logic;
+package comp7005.filetransfer.logic;
 
 import org.json.JSONArray;
 import org.json.JSONException;

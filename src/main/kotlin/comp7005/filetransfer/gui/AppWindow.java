@@ -1,4 +1,4 @@
-package filetransfer.gui;
+package comp7005.filetransfer.gui;
 
 import java.awt.Dimension;
 
@@ -10,8 +10,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-import filetransfer.logic.ClientLogic;
-import filetransfer.logic.ServerLogic;
+import comp7005.filetransfer.logic.ClientLogic;
+import comp7005.filetransfer.logic.ServerLogic;
 
 /**
  * the application window, and entry point of the program.

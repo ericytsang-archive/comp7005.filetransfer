@@ -1,8 +1,6 @@
-package filetransfer.net;
+package comp7005.filetransfer.net;
 
 import java.io.*;
-
-import filetransfer.MiscUtils;
 
 /**
  * provides static access to miscellaneous helper functions related to

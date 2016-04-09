@@ -1,13 +1,13 @@
-package filetransfer.logic;
+package comp7005.filetransfer.logic;
 
 import java.awt.Component;
 import java.io.IOException;
 
 import javax.swing.JOptionPane;
 
-import filetransfer.net.AlreadyBoundException;
-import filetransfer.net.PortOccupiedException;
-import filetransfer.net.Server;
+import comp7005.filetransfer.net.AlreadyBoundException;
+import comp7005.filetransfer.net.PortOccupiedException;
+import comp7005.filetransfer.net.Server;
 
 /**
  * contains all the logic and state information used to handle starting and

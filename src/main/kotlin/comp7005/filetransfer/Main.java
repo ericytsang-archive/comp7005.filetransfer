@@ -1,6 +1,6 @@
-package filetransfer;
+package comp7005.filetransfer;
 
-import filetransfer.gui.AppWindow;
+import comp7005.filetransfer.gui.AppWindow;
 
 /**
  * the main entry point to the application.

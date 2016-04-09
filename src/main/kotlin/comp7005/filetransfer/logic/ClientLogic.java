@@ -1,4 +1,4 @@
-package filetransfer.logic;
+package comp7005.filetransfer.logic;
 
 import java.awt.Component;
 import java.io.File;

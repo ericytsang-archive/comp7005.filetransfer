@@ -1,4 +1,4 @@
-package filetransfer.gui;
+package comp7005.filetransfer.gui;
 
 import java.awt.Dimension;
 

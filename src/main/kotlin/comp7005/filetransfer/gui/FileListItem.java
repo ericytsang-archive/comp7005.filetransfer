@@ -1,33 +1,33 @@
-package filetransfer.gui;
+package comp7005.filetransfer.gui;
 
 import java.io.File;
 
 import javax.swing.Icon;
 import javax.swing.UIManager;
 
-import filetransfer.logic.JsonableFile;
+import comp7005.filetransfer.logic.JsonableFile;
 
 /**
- * a list item used to represent folder and can be displayed in a component.
+ * a list item used to represent a file and can be displayed in a component.
  *
- * @file    FolderListItem.java
+ * @file    FileListItem.java
  *
  * @program comp7005.filetransfer.jar
  *
- * @class   FolderListItem
+ * @class   FileListItem
  *
  * @date    2015-10-01T08:54:10-0800
  *
  * @author  Eric Tsang
  */
-public class FolderListItem extends ListItem<JsonableFile>
+public class FileListItem extends ListItem<JsonableFile>
 {
-    private static final Icon DEFAULT_ICON = UIManager.getIcon("FileView.directoryIcon");
+    private static final Icon DEFAULT_ICON = UIManager.getIcon("FileView.fileIcon");
 
     /**
-     * instantiates a FolderListItem instance used to display the passed model.
+     * instantiates a ListItem instance used to display the passed model.
      *
-     * @method  FolderListItem
+     * @method  FileListItem
      *
      * @date    2015-10-01T08:27:33-0800
      *
@@ -35,17 +35,17 @@ public class FolderListItem extends ListItem<JsonableFile>
      *
      * @param   model the model to present in this component
      *
-     * @return  a new instance of a FolderListItem.
+     * @return  a new instance of a FileListItem.
      */
-    public FolderListItem(JsonableFile file)
+    public FileListItem(JsonableFile file)
     {
         super(file);
     }
 
     /**
-     * instantiates a FolderListItem instance used to display the passed model.
+     * instantiates a ListItem instance used to display the passed model.
      *
-     * @method  FolderListItem
+     * @method  FileListItem
      *
      * @date    2015-10-01T08:27:33-0800
      *
@@ -53,9 +53,9 @@ public class FolderListItem extends ListItem<JsonableFile>
      *
      * @param   model the model to present in this component
      *
-     * @return  a new instance of a FolderListItem.
+     * @return  a new instance of a FileListItem.
      */
-    public FolderListItem(File file)
+    public FileListItem(File file)
     {
         super(new JsonableFile(file));
     }
@@ -78,15 +78,15 @@ public class FolderListItem extends ListItem<JsonableFile>
     }
 
     /**
-     * returns the string to display with the list item.
+     * returns the icon to display next to the list item.
      *
-     * @method  getListItemLabel
+     * @method  getListItemIcon
      *
-     * @date    2015-10-01T08:50:50-0800
+     * @date    2015-10-01T08:49:49-0800
      *
      * @author  Eric Tsang
      *
-     * @return  the string to display with the list item.
+     * @return  the icon associated with the list item.
      */
     @Override
     public String getListItemLabel()

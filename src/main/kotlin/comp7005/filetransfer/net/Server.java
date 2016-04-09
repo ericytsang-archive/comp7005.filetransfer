@@ -1,4 +1,4 @@
-package filetransfer.net;
+package comp7005.filetransfer.net;
 
 import com.teamhoe.reliableudp.ServerSocket;
 import com.teamhoe.reliableudp.SocketInputStream;
@@ -26,7 +26,7 @@ public abstract class Server
     /**
      * number of threads that are waiting for connection requests allowed
      */
-    private static final int MAX_WAITING_ACCEPT_THREADS = 5;
+    private static final int MAX_WAITING_ACCEPT_THREADS = 1;
 
     /**
      * keeps count of the number of threads that are waiting to accept a new
@@ -186,9 +186,9 @@ public abstract class Server
         {
             // accept any new connections until the socket is closed by another
             // thread
-            synchronized(waitingThreadCount)
+            while(!serverSocket.isClosed())
             {
-                while(!serverSocket.isClosed())
+                synchronized(waitingThreadCount)
                 {
                     // wait until there is less than maximum number of threads
                     // waiting before continuing to create another thread
@@ -209,36 +209,35 @@ public abstract class Server
 
                     // create the thread to accept the connection and such
                     waitingThreadCount.incrementAndGet();
-                    new Thread(() ->
-                    {
-                        try
-                        {
-                            SocketInputStream sis = serverSocket.accept(null,null);
-                            try
-                            {
-                                Thread.sleep(10);
-                            }
-                            catch(InterruptedException e)
-                            {
-//                                nothing
-                            }
-                            SocketOutputStream sos = serverSocket.connect(sis.getRemoteAddress(),null);
-                            synchronized(waitingThreadCount)
-                            {
-                                waitingThreadCount.decrementAndGet();
-                                waitingThreadCount.notify();
-                            }
-                            onAccept(sis,sos);
-                        }
-
-                        // IOException occurred. perhaps server socket is
-                        // closed.
-                        catch(IOException e)
-                        {
-                            AcceptThread.this.interrupt();
-                        }
-                    }).start();
                 }
+                new Thread(() ->
+                {
+                    try
+                    {
+                        System.out.println("new thread waiting for connection");
+                        SocketInputStream sis = serverSocket.accept(null,null);
+                        Thread.sleep(1000);
+                        SocketOutputStream sos = serverSocket.connect(sis.getRemoteAddress(),null);
+                        System.out.println("new connection accepted");
+                        synchronized(waitingThreadCount)
+                        {
+                            waitingThreadCount.decrementAndGet();
+                            waitingThreadCount.notify();
+                        }
+                        onAccept(sis,sos);
+                    }
+
+                    // IOException occurred. perhaps server socket is
+                    // closed.
+                    catch(IOException e)
+                    {
+                        AcceptThread.this.interrupt();
+                    }
+                    catch(InterruptedException e)
+                    {
+                        // nothing
+                    }
+                }).start();
             }
         }
     }

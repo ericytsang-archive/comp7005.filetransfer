@@ -1,4 +1,4 @@
-package filetransfer;
+package comp7005.filetransfer;
 
 /**
  * provides static access to miscellaneous helper functions.

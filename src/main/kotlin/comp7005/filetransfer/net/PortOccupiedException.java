@@ -1,4 +1,4 @@
-package filetransfer.net;
+package comp7005.filetransfer.net;
 
 import java.net.BindException;
 

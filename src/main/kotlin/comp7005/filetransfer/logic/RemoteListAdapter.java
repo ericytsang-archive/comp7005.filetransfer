@@ -1,12 +1,12 @@
-package filetransfer.logic;
+package comp7005.filetransfer.logic;
 
 import java.util.Collection;
 import java.util.LinkedList;
 
-import filetransfer.gui.LabeledScrollPane;
-import filetransfer.gui.FileListItem;
-import filetransfer.gui.FolderListItem;
-import filetransfer.gui.ListItem;
+import comp7005.filetransfer.gui.LabeledScrollPane;
+import comp7005.filetransfer.gui.FileListItem;
+import comp7005.filetransfer.gui.FolderListItem;
+import comp7005.filetransfer.gui.ListItem;
 
 /**
  * manages the list items that are displayed on the scroll pane used to show

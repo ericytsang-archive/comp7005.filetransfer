@@ -1,8 +1,10 @@
-package filetransfer.logic;
+package comp7005.filetransfer.logic;
 
 import com.teamhoe.reliableudp.ServerSocket;
 import com.teamhoe.reliableudp.SocketInputStream;
 import com.teamhoe.reliableudp.SocketOutputStream;
+import comp7005.filetransfer.net.NetUtils;
+import comp7005.filetransfer.net.Server;
 import org.json.JSONArray;
 
 import java.io.*;
@@ -11,9 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.ProgressMonitor;
-
-import filetransfer.net.NetUtils;
-import filetransfer.net.Server;
 
 /**
  * listens to a specified port on the host, and accepts any connection requests
@@ -80,11 +79,11 @@ public class AppServer extends Server
      *
      * @throws  IOException thrown when an IOException occurs.
      */
-    public static List<JsonableFile> pullDirectoryFiles(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String directoryPath) throws IOException
+    static List<JsonableFile> pullDirectoryFiles(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String directoryPath) throws IOException
     {
 
         // perform the pull
-        try(ServerSocket serverSocket = ServerSocket.Companion.make(null))
+        try(ServerSocket serverSocket = ServerSocket.Companion.make(7001))
         {
             // connect to the remote address
             progressMonitor.setProgress(0);
@@ -103,10 +102,10 @@ public class AppServer extends Server
             // read the server's json response
             progressMonitor.setProgress(3);
             String response = NetUtils.readString(sis);
-            sis.close();
-            sos.close();
 
             // parse the received response string and return
+            sis.close();
+            sos.close();
             progressMonitor.setProgress(4);
             return JsonableUtils.fromJsonArray(JsonableFile.class,new JSONArray(response));
         }
@@ -130,40 +129,30 @@ public class AppServer extends Server
     @SuppressWarnings("ThrowFromFinallyBlock")
     private void handlePullDirectoryFiles(SocketInputStream sis,SocketOutputStream sos) throws IOException
     {
-        try
+        // read the path from the socket
+        String path = NetUtils.readString(sis);
+        File directory = path.equals(".")
+            ? new File(path).getAbsoluteFile().getParentFile()
+            : new File(path);
+
+        // add all the files in the specified directory to a list to be returned
+        LinkedList<JsonableFile> files = new LinkedList<>();
+        //noinspection ConstantConditions
+        for(File file : directory.listFiles())
         {
-            // read the path from the socket
-            String path = NetUtils.readString(sis);
-            File directory = path.equals(".")
-                    ? new File(path).getAbsoluteFile().getParentFile()
-                    : new File(path);
-
-            // add all the files in the specified directory to a list to be returned
-            LinkedList<JsonableFile> files = new LinkedList<>();
-            //noinspection ConstantConditions
-            for(File file : directory.listFiles())
-            {
-                files.add(new JsonableFile(file));
-            }
-
-            // put parent directory as element in list to be returned if it exists
-            File parentFile = directory.getParentFile();
-            if(parentFile != null)
-            {
-                files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
-            }
-
-            // serialize the list of files, and send it back, and wait for the
-            // connection to close before closing ourselves and returning
-            NetUtils.sendString(sos,JsonableUtils.toJsonArray(files).toString());
-            sos.flush();
+            files.add(new JsonableFile(file));
         }
 
-        finally
+        // put parent directory as element in list to be returned if it exists
+        File parentFile = directory.getParentFile();
+        if(parentFile != null)
         {
-            sis.close();
-            sos.close();
+            files.addFirst(new JsonableFile(parentFile.isDirectory(),parentFile.getAbsolutePath(),".."));
         }
+
+        // serialize the list of files, and send it back, and wait for the
+        // connection to close before closing ourselves and returning
+        NetUtils.sendString(sos,JsonableUtils.toJsonArray(files).toString());
     }
 
     /**
@@ -185,7 +174,7 @@ public class AppServer extends Server
     public static void pullFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String remoteFilePath,File directory) throws IOException
     {
         // perform the pull; download a file from the server
-        try(ServerSocket serverSocket = ServerSocket.Companion.make(null))
+        try(ServerSocket serverSocket = ServerSocket.Companion.make(7001))
         {
             // connect to the remote address
             SocketOutputStream sos = serverSocket.connect(remoteAddress,null);
@@ -283,7 +272,7 @@ public class AppServer extends Server
             }
 
             // wait for connection to close before closing ourselves and returning
-            sos.flush();
+            sos.close();
         }
 
         // close the socket once we're done with it
@@ -313,10 +302,12 @@ public class AppServer extends Server
     public static void pushFile(InetSocketAddress remoteAddress,ProgressMonitor progressMonitor,String directory,File fileToSend) throws IOException
     {
         // perform the push
-        try(ServerSocket serverSocket = ServerSocket.Companion.make(null))
+        try(ServerSocket serverSocket = ServerSocket.Companion.make(7001))
         {
             // connect to the remote address
             SocketOutputStream sos = serverSocket.connect(remoteAddress,null);
+            SocketInputStream sis = serverSocket.accept(remoteAddress,null);
+            sis.close();
 
             // get handles to the streams
             DataOutputStream os = new DataOutputStream(sos);
@@ -352,7 +343,6 @@ public class AppServer extends Server
             }
 
             // wait for connection to close before closing ourselves and returning
-            sos.flush();
             sos.close();
         }
     }
@@ -371,40 +361,30 @@ public class AppServer extends Server
     @SuppressWarnings("ThrowFromFinallyBlock")
     private void handlePushFile(SocketInputStream sis) throws IOException
     {
-        // perform the pull
-        try
+        // get handles to the streams
+        DataInputStream is = new DataInputStream(sis);
+
+        // read the size of the file
+        String directory = NetUtils.readString(sis);
+        String fileName = NetUtils.readString(sis);
+
+        // read the contents of the file until its empty
+        File file = new File(directory,fileName);
+        try(FileOutputStream fos = new FileOutputStream(file))
         {
-            // get handles to the streams
-            DataInputStream is = new DataInputStream(sis);
-
-            // read the size of the file
-            String directory = NetUtils.readString(sis);
-            String fileName = NetUtils.readString(sis);
-
-            // read the contents of the file until its empty
-            File file = new File(directory,fileName);
-            try(FileOutputStream fos = new FileOutputStream(file))
+            int readResult;
+            byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
+            do
             {
-                int readResult;
-                byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
-                do
-                {
-                    // read the packet
-                    readResult = is.readInt();
-                    int segmentSize = Math.max(0,readResult);
-                    is.readFully(fileData,0,segmentSize);
+                // read the packet
+                readResult = is.readInt();
+                int segmentSize = Math.max(0,readResult);
+                is.readFully(fileData,0,segmentSize);
 
-                    // write received bytes into the file
-                    fos.write(fileData,0,segmentSize);
-                }
-                while(readResult != -1);
+                // write received bytes into the file
+                fos.write(fileData,0,segmentSize);
             }
-        }
-
-        // close the socket
-        finally
-        {
-            sis.close();
+            while(readResult != -1);
         }
     }
 
@@ -440,7 +420,6 @@ public class AppServer extends Server
                 handlePullFile(sis,sos);
                 break;
             case TYPE_PUSH_FILE:
-                sos.close();
                 handlePushFile(sis);
                 break;
             }
@@ -448,6 +427,11 @@ public class AppServer extends Server
         catch(IOException e)
         {
             throw new RuntimeException(e);
+        }
+        finally
+        {
+            sos.close();
+            sis.close();
         }
     }
 }
