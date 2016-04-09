@@ -308,6 +308,7 @@ public class ClientLogic
 
         catch(IOException e)
         {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(parentComponent,makeConnectFailedMessage(remoteAddress.getHostString(),remoteAddress.getPort()),TITLE_CONNECT_FAILED,JOptionPane.ERROR_MESSAGE);
             files = Collections.emptyList();
         }

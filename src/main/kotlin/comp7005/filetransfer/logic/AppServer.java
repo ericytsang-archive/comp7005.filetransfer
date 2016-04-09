@@ -88,7 +88,7 @@ public class AppServer extends Server
             // connect to the remote address
             progressMonitor.setProgress(0);
             SocketOutputStream sos = serverSocket.connect(remoteAddress,null);
-            SocketInputStream sis = serverSocket.accept(remoteAddress,null);
+            SocketInputStream sis = serverSocket.accept(null,null);
 
             // get handles to the streams
             progressMonitor.setProgress(1);
@@ -216,12 +216,15 @@ public class AppServer extends Server
                     // stop the download if it is cancelled
                     if(progressMonitor.isCanceled())
                     {
+                        sis.close();
                         sos.close();
                         break;
                     }
                 }
                 while(readResult != -1);
             }
+            sis.close();
+            sos.close();
         }
     }
 
@@ -239,47 +242,33 @@ public class AppServer extends Server
     @SuppressWarnings("ThrowFromFinallyBlock")
     private void handlePullFile(SocketInputStream sis,SocketOutputStream sos) throws IOException
     {
-        // handle a request to pull a file
-        try
+        // get references to the streams
+        DataOutputStream os = new DataOutputStream(sos);
+
+        // read the path from the socket
+        String path = NetUtils.readString(sis);
+
+        // send the file size, then file name
+        File fileToSend = new File(path);
+        os.writeLong(fileToSend.length());
+        NetUtils.sendString(sos,fileToSend.getName());
+
+        // read the contents of the file until its empty
+        try(FileInputStream fis = new FileInputStream(fileToSend))
         {
-            // get references to the streams
-            DataOutputStream os = new DataOutputStream(sos);
-
-            // read the path from the socket
-            String path = NetUtils.readString(sis);
-
-            // send the file size, then file name
-            File fileToSend = new File(path);
-            os.writeLong(fileToSend.length());
-            NetUtils.sendString(sos,fileToSend.getName());
-
-            // read the contents of the file until its empty
-            try(FileInputStream fis = new FileInputStream(fileToSend))
+            int readResult;
+            byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
+            do
             {
-                int readResult;
-                byte[] fileData = new byte[MAX_FILE_SEGMENT_SIZE];
-                do
-                {
-                    // gather data to create packet
-                    readResult = fis.read(fileData);
-                    int segmentSize = Math.max(0,readResult);
+                // gather data to create packet
+                readResult = fis.read(fileData);
+                int segmentSize = Math.max(0,readResult);
 
-                    // send the packet
-                    os.writeInt(readResult);
-                    os.write(fileData,0,segmentSize);
-                }
-                while(readResult != -1);
+                // send the packet
+                os.writeInt(readResult);
+                os.write(fileData,0,segmentSize);
             }
-
-            // wait for connection to close before closing ourselves and returning
-            sos.close();
-        }
-
-        // close the socket once we're done with it
-        finally
-        {
-            sos.close();
-            sis.close();
+            while(readResult != -1);
         }
     }
 
@@ -343,6 +332,7 @@ public class AppServer extends Server
             }
 
             // wait for connection to close before closing ourselves and returning
+            sis.close();
             sos.close();
         }
     }
